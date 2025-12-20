@@ -7,15 +7,17 @@ public class DronePropellerController : MonoBehaviour
     public Transform propellerBL;
     public Transform propellerBR;
 
-    public float baseSpinSpeed = 2000f;
+    public float baseSpinSpeed = 2500f;
     
     [HideInInspector]
     public float currentSpinMultiplier = 0f;  // 0 = idle, 1 = max speed
 
     void Update()
     {
-        float dynamicSpeed = baseSpinSpeed * (0.4f + currentSpinMultiplier * 1.6f);  
-        float speed = dynamicSpeed * Time.deltaTime;
+        //float dynamicSpeed = baseSpinSpeed * (0.4f + currentSpinMultiplier * 1.6f);  
+        //float speed = dynamicSpeed * Time.deltaTime;
+        
+        float speed = Mathf.Lerp(baseSpinSpeed * 0.8f, baseSpinSpeed * 3.2f, currentSpinMultiplier);
 
         // Front Left - CW
         if (propellerFL)
