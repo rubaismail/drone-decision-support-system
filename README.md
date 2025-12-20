@@ -8,16 +8,12 @@ Existing C-UAS systems do things like:
 
 
     - RF takeover → force landing
-
     
     - GPS spoofing → redirect
 
-    
     - Kinetic interceptors (like nets)
-
     
     - High-power microwave disruption
-
     
     - Drone-on-drone entanglement
 
@@ -32,23 +28,17 @@ NONE of them tell the operator:
 
 
     - “If you neutralize the drone right now, where will it fall?”
-
     
     - “How fast will it hit the ground?”
 
-    
     - “What is the injury radius?”
-
     
     - “Is this a safe moment or unsafe moment to intercept?”
 
-    
     - “Does wind affect risk?”
-
     
     - “Is the descent predictable?”
 
-    
     - “Should you wait 1–2 seconds for a safer window?”
 
     
