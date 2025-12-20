@@ -23,7 +23,9 @@ Existing C-UAS systems do things like:
 
     
     
-These systems disable or capture the drone, They assess risk and predict threat levels of drones. But what about AFTER a drone has been assigned a risk score and has been identified as a threat? No vendor brochure or datasheet says: “We show operators a live impact footprint / impact radius heatmap based on drone mass, velocity, altitude, local terrain, etc., updated per neutralization method.”
+These systems disable or capture the drone, They assess risk and predict threat levels of drones. But what about AFTER a drone has been assigned a risk score and has been identified as a threat? 
+
+No vendor brochure or datasheet says: “We show operators a live impact footprint / impact radius heatmap based on drone mass, velocity, altitude, local terrain, etc., updated per neutralization method.”
 
 
 NONE of them tell the operator:
