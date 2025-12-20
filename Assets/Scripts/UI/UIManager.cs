@@ -8,24 +8,28 @@ namespace UI
 {
     public class DroneUIManager : MonoBehaviour
     {
-        [Header("=== PANEL STATES ===")] public GameObject inputPanel; // Panel_InputState
-        public GameObject outputPanel; // Panel_OutputState
+        [Header("=== PANEL STATES ===")] 
+        public GameObject telemetryPanel;  //Panel_Telemetry
+        public GameObject inputPanel;      // Panel_Inputs
+        public GameObject outputPanel;     // Panel_Results
 
         [Header("=== TELEMETRY TEXT (AUTO) ===")]
         public TMP_Text altitudeText;
-
         public TMP_Text speedText;
-        public TMP_Text headingText;
+        //public TMP_Text headingText;
 
-        [Header("=== OPERATOR INPUTS ===")] public Slider timeOffsetSlider;
-        public TMP_Text timeOffsetValueText;
+        [Header("=== OPERATOR INPUTS ===")] 
+        //public Slider timeOffsetSlider;
+        //public TMP_Text timeOffsetValueText;
         public TMP_Dropdown weightDropdown;
 
-        [Header("=== PREDICTION OUTPUT ===")] public TMP_Text impactTimeText;
+        [Header("=== PREDICTION OUTPUT ===")] 
+        public TMP_Text impactTimeText;
         public TMP_Text riskLevelText;
         public TMP_Text recommendationText;
 
-        [Header("=== DRONE REFERENCES ===")] public Transform droneTransform;
+        [Header("=== DRONE REFERENCES ===")] 
+        public Transform droneTransform;
         public DroneWanderController droneController;
     
         CesiumGlobeAnchor globeAnchor;
@@ -38,27 +42,31 @@ namespace UI
         void Start()
         {
             // Initial UI state
-            ShowInputState();
+            ShowOperatorState();
         }
 
         void Update()
         {
+            if (globeAnchor == null) return;
+            
             globeAnchor.Sync();
             UpdateTelemetry();
-            UpdateInputDisplay();
         }
-
-        public void ShowInputState()
+        
+        void ShowOperatorState()
         {
+            telemetryPanel.SetActive(true);
             inputPanel.SetActive(true);
             outputPanel.SetActive(false);
         }
 
-        public void ShowOutputState()
+        void ShowResultsState()
         {
+            telemetryPanel.SetActive(false);
             inputPanel.SetActive(false);
             outputPanel.SetActive(true);
         }
+        
 
         void UpdateTelemetry()
         {
@@ -67,43 +75,40 @@ namespace UI
 
             float altitude = (float)globeAnchor.height; 
             float speed = droneController.currentSpeed;
-            float heading = droneTransform.eulerAngles.y;
 
             altitudeText.text = $"Altitude: {altitude:F1} m";
             speedText.text = $"Speed: {speed:F1} m/s";
-            headingText.text = $"Heading: {heading:F0}°";
-        }
-
-        void UpdateInputDisplay()
-        {
-            if (timeOffsetSlider != null && timeOffsetValueText != null)
-            {
-                timeOffsetValueText.text = $"+{timeOffsetSlider.value:F1} s";
-            }
         }
 
         public void OnPredictPressed()
         {
-            // Read operator inputs
-            float timeOffset = timeOffsetSlider.value;
-            float weight = GetDroneMass();
+            float altitude = (float)globeAnchor.height;
+            float impactTime = PredictImpactTime(altitude);
 
-            // TEMP PLACEHOLDER (will be replaced with real prediction) 
-            float predictedImpactTime = timeOffset + 2.5f;
-            string risk = "MEDIUM";
-            string recommendation = "WAIT 1.5 SECONDS";
+            string risk = impactTime < 2f ? "HIGH" : "MEDIUM";
+            string recommendation =
+                impactTime < 2f ? "IMMEDIATE STRIKE" : "WAIT";
 
-            // Update output UI
-            impactTimeText.text = $"Impact Time: {predictedImpactTime:F1} s";
+            impactTimeText.text = $"Impact Time: {impactTime:F2} s";
             riskLevelText.text = $"Risk Level: {risk}";
             recommendationText.text = recommendation;
 
-            ShowOutputState();
+            ShowResultsState();
         }
 
         public void OnBackPressed()
         {
-            ShowInputState();
+            ShowOperatorState();
+        }
+
+        float PredictImpactTime(float altitudeMeters)
+        {
+            const float gravity = 9.81f;
+
+            if (altitudeMeters <= 0f)
+                return 0f;
+
+            return Mathf.Sqrt((2f * altitudeMeters) / gravity);
         }
 
         float GetDroneMass()
