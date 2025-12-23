@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Utilities
+namespace Presentation.Utilities
 {
     public class FreeFlyCamera : MonoBehaviour
     {

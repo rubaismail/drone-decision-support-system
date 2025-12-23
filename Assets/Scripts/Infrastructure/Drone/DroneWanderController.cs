@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Drone
+namespace Infrastructure.Drone
 {
     public class DroneWanderController : MonoBehaviour
     {

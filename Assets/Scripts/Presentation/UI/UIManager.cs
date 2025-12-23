@@ -1,10 +1,9 @@
 using CesiumForUnity;
-using Drone;
+using Infrastructure.Drone;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-namespace UI
+namespace Presentation.UI
 {
     public class DroneUIManager : MonoBehaviour
     {
