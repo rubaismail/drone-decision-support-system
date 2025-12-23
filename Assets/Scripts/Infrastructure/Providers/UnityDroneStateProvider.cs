@@ -13,7 +13,7 @@ namespace Infrastructure.Providers
         [Header("Physical Properties")]
         [SerializeField] private float _massKg = 2.0f;
 
-        public DroneState GetState()
+        public DroneState GetCurrentState()
         {
             return new DroneState
             {

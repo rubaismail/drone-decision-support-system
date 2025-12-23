@@ -3629,6 +3629,8 @@ GameObject:
   - component: {fileID: 1812797781}
   - component: {fileID: 1812797782}
   - component: {fileID: 1812797783}
+  - component: {fileID: 1812797785}
+  - component: {fileID: 1812797784}
   m_Layer: 0
   m_Name: DroneRoot
   m_TagString: Untagged
@@ -3644,7 +3646,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1812797777}
   serializedVersion: 2
-  m_LocalRotation: {x: -2.220446e-17, y: 1.38263e-16, z: 1.7287181e-16, w: 1}
+  m_LocalRotation: {x: -2.220446e-17, y: 1.3693664e-16, z: 1.7208147e-16, w: 1}
   m_LocalPosition: {x: -17.51, y: -1.58, z: 4.656613e-10}
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 0
@@ -3691,12 +3693,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97c47033da6064ea8a0e26cb97ed1705, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RandomWander
-  centerPoint: {fileID: 648987711}
-  roamRadius: 80
-  speed: 8
-  changeDirectionTime: 3
-  _targetDirection: {x: 0, y: 0, z: 0}
-  _timer: 0
 --- !u!114 &1812797781
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3714,8 +3710,8 @@ MonoBehaviour:
   _localToGlobeFixedMatrix:
     c0:
       x: 4.941124456518036
-      y: 0.7650418976757705
-      z: -0.0000000000000003641503212979705
+      y: 0.7650418976757706
+      z: -0.00000000000000039716453371137274
       w: 0
     c1:
       x: 0.6716530084205637
@@ -3771,6 +3767,34 @@ MonoBehaviour:
   wanderRadius: 40
   currentSpeed: 0
   propellers: {fileID: 0}
+--- !u!114 &1812797784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812797777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fba049adf05947a6ad0f73337fb9889, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Infrastructure.Debugging.GroundHeightDebug
+  groundHeightProviderBehaviour: {fileID: 1939402705}
+--- !u!114 &1812797785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812797777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9060a72f47dd44c3b351a7336c20ea42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Infrastructure.Providers.UnityDroneStateProvider
+  _droneTransform: {fileID: 1812797778}
+  _droneRigidbody: {fileID: 1812797779}
+  _massKg: 2
 --- !u!1 &1866646133
 GameObject:
   m_ObjectHideFlags: 0
@@ -3845,6 +3869,54 @@ MonoBehaviour:
   _updateInEditor: 1
   _logSelectionStats: 0
   _createPhysicsMeshes: 1
+--- !u!1 &1939402704
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1939402706}
+  - component: {fileID: 1939402705}
+  m_Layer: 0
+  m_Name: Environment
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1939402705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939402704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 904db543102c3475581189316ed2a4d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Infrastructure.Providers.UnityGroundHeightProvider
+  raycastDistance: 5000
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!4 &1939402706
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939402704}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 119.84231, y: -6.45662, z: 65.35702}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1969560470 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4293594867692551781, guid: f8d50c9c60e6d494cad2d373621b58a6, type: 3}
@@ -4361,3 +4433,4 @@ SceneRoots:
   - {fileID: 2020140962}
   - {fileID: 867586962}
   - {fileID: 1614933087}
+  - {fileID: 1939402706}
