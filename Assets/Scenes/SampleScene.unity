@@ -1847,6 +1847,8 @@ GameObject:
   - component: {fileID: 1074124084}
   - component: {fileID: 1074124083}
   - component: {fileID: 1074124085}
+  - component: {fileID: 1074124087}
+  - component: {fileID: 1074124086}
   m_Layer: 5
   m_Name: Panel_OperatorUI
   m_TagString: Untagged
@@ -1890,7 +1892,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.392}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -1940,6 +1942,46 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1074124086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1074124081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!223 &1074124087
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1074124081}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 0
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_AdditionalShaderChannelsFlag: 25
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
+  m_TargetDisplay: 0
 --- !u!1 &1082736096
 GameObject:
   m_ObjectHideFlags: 0
@@ -2160,6 +2202,9 @@ MonoBehaviour:
   m_MultiSelect: 0
   m_Options:
     m_Options:
+    - m_Text: Weight Category
+      m_Image: {fileID: 0}
+      m_Color: {r: 1, g: 1, b: 1, a: 1}
     - m_Text: Light
       m_Image: {fileID: 0}
       m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -2789,7 +2834,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Light
+  m_text: Weight Category
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3599,7 +3644,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1812797777}
   serializedVersion: 2
-  m_LocalRotation: {x: -2.220446e-17, y: 1.3415414e-16, z: 1.5391822e-16, w: 1}
+  m_LocalRotation: {x: -2.220446e-17, y: 1.38263e-16, z: 1.7287181e-16, w: 1}
   m_LocalPosition: {x: -17.51, y: -1.58, z: 4.656613e-10}
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 0
@@ -3650,6 +3695,8 @@ MonoBehaviour:
   roamRadius: 80
   speed: 8
   changeDirectionTime: 3
+  _targetDirection: {x: 0, y: 0, z: 0}
+  _timer: 0
 --- !u!114 &1812797781
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3667,16 +3714,16 @@ MonoBehaviour:
   _localToGlobeFixedMatrix:
     c0:
       x: 4.941124456518036
-      y: 0.7650418976757707
-      z: -0.0000000000000004602358473502055
+      y: 0.7650418976757705
+      z: -0.0000000000000003641503212979705
       w: 0
     c1:
-      x: 0.671653008420564
+      x: 0.6716530084205637
       y: -4.3379599421720245
       z: 2.3939477388594956
       w: 0
     c2:
-      x: -0.3662940642147374
+      x: -0.36629406421473737
       y: 2.3657587440209413
       z: 4.389648530760693
       w: 0
@@ -3713,14 +3760,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 1812797777}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 425f8ccd39e0a46bb9102dca90ec339a, type: 3}
+  m_Script: {fileID: 11500000, guid: 26b1d0459c4674bd7829e14e66a2fd10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneWanderController
-  minSpeed: 5
-  maxSpeed: 15
-  acceleration: 3
+  minSpeed: 1
+  maxSpeed: 6
+  acceleration: 2
   directionChangeInterval: 2
-  roamCenter: {fileID: 648987711}
+  roamCenter: {fileID: 0}
   wanderRadius: 40
   currentSpeed: 0
   propellers: {fileID: 0}
