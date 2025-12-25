@@ -47,5 +47,17 @@ namespace Infrastructure.Simulation
                 predictedImpactMarker.transform.position =
                     LatestPrediction.impactPointWorld;
         }
+        public FallPredictionResult ComputePredictionNow()
+        {
+            DroneState state = assembler.BuildState();
+
+            LatestPrediction =
+                predictor.Predict(
+                    state,
+                    windProvider.GetWind()
+                );
+
+            return LatestPrediction;
+        }
     }
 }

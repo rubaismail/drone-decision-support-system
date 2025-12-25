@@ -116,7 +116,7 @@ namespace Presentation.UI
                 return;
 
             windProvider.SetWindSpeed(value);
-            windSpeedValue.text = $"Wind Speed: {value:F1} m/s";
+            windSpeedValue.text = $"{value:F1} m/s";
         }
 
         void OnWindDirectionChanged(float value)
@@ -126,7 +126,7 @@ namespace Presentation.UI
 
             windProvider.SetWindDirection(value);
             windDirectionValue.text =
-                $"Wind Direction: {value:F0}° ({DegreesToCardinal(value)})";
+                $"{value:F0}° ({DegreesToCardinal(value)})";
         }
 
         string DegreesToCardinal(float degrees)
@@ -147,7 +147,7 @@ namespace Presentation.UI
 
         public void OnPredictPressed()
         {
-            var prediction = predictionRunner.LatestPrediction;
+            var prediction = predictionRunner.ComputePredictionNow();
 
             if (!prediction.isValid)
             {
