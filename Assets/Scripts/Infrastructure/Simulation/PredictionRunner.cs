@@ -31,14 +31,18 @@ namespace Infrastructure.Simulation
         void Update()
         {
             DroneState state = assembler.BuildState();
-            Vector3 impact =
-                predictor.PredictImpactPoint(
+            var prediction =
+                predictor.Predict(
                     state,
                     windProvider.GetWind()
                 );
-            
+
+            if (!prediction.isValid)
+                return;
+
             if (predictedImpactMarker != null)
-                predictedImpactMarker.transform.position = impact;
+                predictedImpactMarker.transform.position =
+                    prediction.impactPointWorld;
         }
     }
 }
