@@ -1,6 +1,7 @@
 using CesiumForUnity;
 using Infrastructure.Drone;
 using Infrastructure.Providers;
+using Infrastructure.Simulation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,10 +23,10 @@ namespace Presentation.UI
         public TMP_Dropdown weightDropdown; // kept for later use
         
         public Slider windSpeedSlider;
+        public TMP_Text windSpeedValue;
+        
         public Slider windDirectionSlider;
-
-        public TMP_Text windSpeedText;
-        public TMP_Text windDirectionText;
+        public TMP_Text windDirectionValue;
 
         [Header("=== PREDICTION OUTPUT ===")]
         public TMP_Text impactTimeText;
@@ -34,6 +35,9 @@ namespace Presentation.UI
 
         [Header("=== PROVIDERS ===")]
         public UnityWindProvider windProvider;
+        
+        [Header("Prediction")]
+        public PredictionRunner predictionRunner;
 
         [Header("=== DRONE REFERENCES ===")]
         public Transform droneTransform;
@@ -112,7 +116,7 @@ namespace Presentation.UI
                 return;
 
             windProvider.SetWindSpeed(value);
-            windSpeedText.text = $"Wind Speed: {value:F1} m/s";
+            windSpeedValue.text = $"Wind Speed: {value:F1} m/s";
         }
 
         void OnWindDirectionChanged(float value)
@@ -121,7 +125,7 @@ namespace Presentation.UI
                 return;
 
             windProvider.SetWindDirection(value);
-            windDirectionText.text =
+            windDirectionValue.text =
                 $"Wind Direction: {value:F0}° ({DegreesToCardinal(value)})";
         }
 
@@ -143,8 +147,27 @@ namespace Presentation.UI
 
         public void OnPredictPressed()
         {
-            // Prediction already runs live via PredictionRunner.
-            // This button just switches UI state.
+            var prediction = predictionRunner.LatestPrediction;
+
+            if (!prediction.isValid)
+            {
+                impactTimeText.text = "Time to Impact: --";
+                riskLevelText.text = "Risk Level: --";
+                recommendationText.text = "Recommendation: Invalid prediction";
+                return;
+            }
+
+            impactTimeText.text =
+                $"Time to Impact: {prediction.timeToImpact:F1} s";
+
+            riskLevelText.text =
+                $"Risk Level: {prediction.riskLevel}";
+
+            recommendationText.text =
+                prediction.timeToImpact < 3f
+                    ? "Recommendation: Delay neutralization"
+                    : "Recommendation: Neutralize now";
+
             ShowResultsState();
         }
 

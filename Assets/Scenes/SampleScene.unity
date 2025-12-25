@@ -2769,14 +2769,15 @@ MonoBehaviour:
   altitudeText: {fileID: 709382731}
   speedText: {fileID: 727932554}
   weightDropdown: {fileID: 1101324421}
-  windSpeedSlider: {fileID: 0}
-  windDirectionSlider: {fileID: 0}
-  windSpeedText: {fileID: 0}
-  windDirectionText: {fileID: 0}
+  windSpeedSlider: {fileID: 1761788666}
+  windSpeedValue: {fileID: 115889760}
+  windDirectionSlider: {fileID: 93380995}
+  windDirectionValue: {fileID: 653111179}
   impactTimeText: {fileID: 1238270335}
   riskLevelText: {fileID: 800403392}
   recommendationText: {fileID: 1424173771}
-  windProvider: {fileID: 0}
+  windProvider: {fileID: 1082214527}
+  predictionRunner: {fileID: 1349887533}
   droneTransform: {fileID: 1812797778}
   droneController: {fileID: 1812797783}
 --- !u!1 &872754284

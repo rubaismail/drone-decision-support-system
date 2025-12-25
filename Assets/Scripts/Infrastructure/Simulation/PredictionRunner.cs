@@ -17,6 +17,8 @@ namespace Infrastructure.Simulation
 
         private DroneStateAssembler assembler;
         private FallPredictor predictor;
+        
+        public FallPredictionResult LatestPrediction { get; private set; }
 
         void Awake()
         {
@@ -31,18 +33,19 @@ namespace Infrastructure.Simulation
         void Update()
         {
             DroneState state = assembler.BuildState();
-            var prediction =
+
+            LatestPrediction =
                 predictor.Predict(
                     state,
                     windProvider.GetWind()
                 );
 
-            if (!prediction.isValid)
+            if (!LatestPrediction.isValid)
                 return;
 
             if (predictedImpactMarker != null)
                 predictedImpactMarker.transform.position =
-                    prediction.impactPointWorld;
+                    LatestPrediction.impactPointWorld;
         }
     }
 }
