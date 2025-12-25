@@ -43,5 +43,15 @@ namespace Infrastructure.Providers
 
             return direction.normalized * windSpeed;
         }
+        
+        public void SetWindSpeed(float speed)
+        {
+            windSpeed = Mathf.Max(0f, speed);
+        }
+
+        public void SetWindDirection(float degrees)
+        {
+            windDirectionDegrees = Mathf.Repeat(degrees, 360f);
+        }
     }
 }
