@@ -16,7 +16,7 @@ namespace Infrastructure.Drone
 
         void Update()
         {
-            //float dynamicSpeed = baseSpinSpeed * (0.4f + currentSpinMultiplier * 1.6f);  
+            //float dynamicSpeed = baseSpinSpeed * (0.4f + currentSpinMultiplier * 1.6f);
             //float speed = dynamicSpeed * Time.deltaTime;
         
             float speed = Mathf.Lerp(baseSpinSpeed * 0.8f, baseSpinSpeed * 3.2f, currentSpinMultiplier);

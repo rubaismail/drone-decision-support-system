@@ -7,14 +7,15 @@ namespace Infrastructure.Providers
 {
     public class UnityDroneStateProvider : MonoBehaviour, IDroneStateProvider
     {
-        [Header("Drone References")] [SerializeField]
-        private Transform droneTransform;
-
+        [Header("Drone References")] 
+        [SerializeField] private Transform droneTransform;
         [SerializeField] private Rigidbody droneRigidbody;
         [SerializeField] private CesiumGeoreference georeference;
 
         [Header("Physical Properties")] [SerializeField]
         private float massKg = 2.0f;
+        
+        public Transform DroneTransform => droneTransform;
 
         public DroneState GetCurrentState()
         {
@@ -22,6 +23,7 @@ namespace Infrastructure.Providers
             {
                 position = droneTransform.position,
                 velocity = droneRigidbody.linearVelocity,
+                forward   = droneTransform.forward,
                 mass = massKg,
                 timestamp = Time.time
             };

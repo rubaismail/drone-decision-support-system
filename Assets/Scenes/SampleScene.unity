@@ -1982,6 +1982,52 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!1 &1082214525
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1082214526}
+  - component: {fileID: 1082214527}
+  m_Layer: 0
+  m_Name: WindProvider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1082214526
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1082214525}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1939402706}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1082214527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1082214525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3ae57ad92b9d4f92a3c357a5d820e40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Infrastructure.Providers.UnityWindProvider
+  windSpeed: 0
+  windDirectionDegrees: 0
 --- !u!1 &1082736096
 GameObject:
   m_ObjectHideFlags: 0
@@ -3157,9 +3203,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Infrastructure.Simulation.PredictionRunner
   droneStateProvider: {fileID: 1812797785}
   groundHeightProvider: {fileID: 1939402705}
-  georeference: {fileID: 0}
-  drawPath: 1
-  pathStep: 0.1
+  windProvider: {fileID: 1082214527}
+  predictedImpactMarker: {fileID: 0}
 --- !u!4 &1349887534
 Transform:
   m_ObjectHideFlags: 0
@@ -3168,7 +3213,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1349887532}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 111.37, y: 0.1, z: 43.53}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3680,6 +3725,7 @@ GameObject:
   - component: {fileID: 1812797783}
   - component: {fileID: 1812797785}
   - component: {fileID: 1812797784}
+  - component: {fileID: 1812797786}
   m_Layer: 0
   m_Name: DroneRoot
   m_TagString: Untagged
@@ -3841,10 +3887,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9060a72f47dd44c3b351a7336c20ea42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Infrastructure.Providers.UnityDroneStateProvider
-  droneTransform: {fileID: 0}
-  droneRigidbody: {fileID: 0}
-  georeference: {fileID: 0}
+  droneTransform: {fileID: 1812797778}
+  droneRigidbody: {fileID: 1812797779}
+  georeference: {fileID: 1146479806}
   massKg: 2
+--- !u!114 &1812797786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812797777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c96d44c3cc59a4a50b3977022722c4f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Infrastructure.Simulation.WindForceApplier
+  rb: {fileID: 1812797779}
+  windProvider: {fileID: 1082214527}
 --- !u!1 &1866646133
 GameObject:
   m_ObjectHideFlags: 0
@@ -3964,7 +4024,8 @@ Transform:
   m_LocalPosition: {x: 119.84231, y: -6.45662, z: 65.35702}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1082214526}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1969560470 stripped

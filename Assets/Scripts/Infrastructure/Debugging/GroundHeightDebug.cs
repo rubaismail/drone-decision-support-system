@@ -44,8 +44,6 @@ namespace Infrastructure.Debugging
             {
                 Debug.LogWarning("[GroundHeightDebug] No ground hit (no cached value)");
             }
-
-            Debug.DrawRay(transform.position, Vector3.down * 200f, Color.red);
         }
     }
 }
