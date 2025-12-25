@@ -1,6 +1,7 @@
 using Core.Data;
 using Core.Prediction;
 using Infrastructure.Providers;
+using Presentation.Visualization;
 using UnityEngine;
 
 namespace Infrastructure.Simulation
@@ -11,6 +12,9 @@ namespace Infrastructure.Simulation
         public UnityDroneStateProvider droneStateProvider;
         public UnityGroundHeightProvider groundHeightProvider;
         public UnityWindProvider windProvider;
+        
+        [Header("Visualization")]
+        [SerializeField] private ImpactDiskVisualizer impactDiskVisualizer;
 
         [Header("Debug")]
         public GameObject predictedImpactMarker;
@@ -56,6 +60,9 @@ namespace Infrastructure.Simulation
                     state,
                     windProvider.GetWind()
                 );
+            
+            if (impactDiskVisualizer != null)
+                impactDiskVisualizer.RefreshNow();
 
             return LatestPrediction;
         }
