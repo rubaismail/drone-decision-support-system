@@ -8,6 +8,9 @@ namespace Infrastructure.Simulation
     {
         private readonly IDroneStateProvider _droneProvider;
         private readonly IGroundHeightProvider _groundProvider;
+        
+        private bool _hasCachedGround = false;
+        private float _lastGroundHeight;
 
         public DroneStateAssembler(
             IDroneStateProvider droneProvider,
@@ -21,12 +24,22 @@ namespace Infrastructure.Simulation
         {
             DroneState baseState = _droneProvider.GetCurrentState();
 
-            float groundHeight;
-            float altitudeAGL = 0f;
+            float altitudeAGL;
 
-            if (_groundProvider.TryGetGroundHeight(baseState.position, out groundHeight))
+            if (_groundProvider.TryGetGroundHeight(baseState.position, out float groundHeight))
             {
-                altitudeAGL = baseState.position.y - groundHeight;
+                _lastGroundHeight = groundHeight;
+                _hasCachedGround = true;
+            }
+
+            if (_hasCachedGround)
+            {
+                altitudeAGL = baseState.position.y - _lastGroundHeight;
+            }
+            else
+            {
+                //fallback 
+                altitudeAGL = Mathf.Max(0.1f, baseState.position.y);
             }
 
             return new DroneState(

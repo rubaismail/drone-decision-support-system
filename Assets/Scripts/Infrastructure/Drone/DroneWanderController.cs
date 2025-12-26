@@ -4,6 +4,9 @@ namespace Infrastructure.Drone
 {
     public class DroneWanderController : MonoBehaviour
     {
+        [Header("Altitude Safety")]
+        public float minAltitude = 5f; // meters above roamCenter Y
+        
         public float minSpeed = 1f;
         public float maxSpeed = 6f;
         public float acceleration = 2f;
@@ -41,6 +44,7 @@ namespace Infrastructure.Drone
             }
         
             KeepWithinRadius();
+            ClampAltitude();
 
             // Spin propellers based on velocity
             if (propellers != null)
@@ -56,6 +60,24 @@ namespace Infrastructure.Drone
             ).normalized;
 
             targetSpeed = Random.Range(minSpeed, maxSpeed);
+        }
+        
+        void ClampAltitude()
+        {
+            if (roamCenter == null)
+                return;
+
+            float minY = roamCenter.position.y + minAltitude;
+
+            if (transform.position.y < minY)
+            {
+                Vector3 pos = transform.position;
+                pos.y = minY;
+                transform.position = pos;
+
+                // Force upward movement
+                targetDirection.y = Mathf.Abs(targetDirection.y);
+            }
         }
 
         void KeepWithinRadius()

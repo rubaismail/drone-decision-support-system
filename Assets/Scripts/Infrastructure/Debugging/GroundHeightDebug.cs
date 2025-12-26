@@ -33,12 +33,12 @@ namespace Infrastructure.Debugging
                 _hasGround = true;
 
                 float altitudeAGL = transform.position.y - groundY;
-                Debug.Log($"[GroundHeightDebug] Altitude AGL: {altitudeAGL:F2} m");
+                //Debug.Log($"[GroundHeightDebug] Altitude AGL: {altitudeAGL:F2} m");
             }
             else if (_hasGround)
             {
                 float altitudeAGL = transform.position.y - _lastValidGroundY;
-                Debug.Log($"[GroundHeightDebug] (cached) Altitude AGL: {altitudeAGL:F2} m");
+                //Debug.Log($"[GroundHeightDebug] (cached) Altitude AGL: {altitudeAGL:F2} m");
             }
             else
             {

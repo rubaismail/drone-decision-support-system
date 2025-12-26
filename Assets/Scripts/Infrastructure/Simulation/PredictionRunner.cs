@@ -21,7 +21,7 @@ namespace Infrastructure.Simulation
 
         private DroneStateAssembler assembler;
         private FallPredictor predictor;
-        
+
         public FallPredictionResult LatestPrediction { get; private set; }
 
         void Awake()

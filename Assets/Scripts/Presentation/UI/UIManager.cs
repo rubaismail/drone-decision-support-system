@@ -147,6 +147,8 @@ namespace Presentation.UI
 
         public void OnPredictPressed()
         {
+            //Debug.Log("PREDICT BUTTON CLICKED");
+            
             var prediction = predictionRunner.ComputePredictionNow();
 
             if (!prediction.isValid)

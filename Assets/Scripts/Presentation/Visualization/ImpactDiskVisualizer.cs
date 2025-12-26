@@ -1,59 +1,100 @@
 using Core.Data;
-using Infrastructure.Simulation;
 using UnityEngine;
+using Core.Prediction;
+using Infrastructure.Simulation;
 
 namespace Presentation.Visualization
 {
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class ImpactDiskVisualizer : MonoBehaviour
     {
-        [Header("Data Source")]
-        [SerializeField] private PredictionRunner predictionRunner;
+        [Header("Data Source")] [SerializeField]
+        private PredictionRunner predictionRunner;
 
-        [Header("Disk Placement")]
-        [SerializeField] private float yOffset = 0.15f; // lift slightly above surface to avoid z-fighting
+        [Header("Disk Placement")] [SerializeField]
+        private float yOffset = 0.15f;
 
-        [Header("Disk Appearance")]
-        [SerializeField] private float minRadiusMeters = 1.0f;
+        [Header("Disk Appearance")] [SerializeField]
+        private float minRadiusMeters = 1.0f;
+
         [SerializeField] private float alpha = 0.55f;
 
-        [Header("Risk Colors")]
-        [SerializeField] private Color lowRiskColor = new Color(0.1f, 1.0f, 0.1f, 1f);
+        [Header("Risk Colors")] [SerializeField]
+        private Color lowRiskColor = new Color(0.1f, 1.0f, 0.1f, 1f);
+
         [SerializeField] private Color mediumRiskColor = new Color(1.0f, 0.8f, 0.1f, 1f);
         [SerializeField] private Color highRiskColor = new Color(1.0f, 0.15f, 0.15f, 1f);
 
         private MeshFilter _meshFilter;
         private MeshRenderer _meshRenderer;
-
         private Material _material;
-        private static Texture2D _radialTexture;
+        private bool _initialized;
 
-        void Awake()
+        private static Texture2D _radialTexture;
+        
+        void OnEnable()
         {
             _meshFilter = GetComponent<MeshFilter>();
             _meshRenderer = GetComponent<MeshRenderer>();
 
-            // Build a simple quad (flat disk carrier)
-            _meshFilter.mesh = BuildQuad();
+            if (_meshFilter == null || _meshRenderer == null)
+            {
+                Debug.LogError("[ImpactDiskVisualizer] Missing Mesh components");
+                return;
+            }
 
-            // Create a material that can show a transparent texture.
-            // Works in Built-in; in URP you may want "Universal Render Pipeline/Unlit"
-            Shader shader = Shader.Find("Unlit/Transparent");
-            if (shader == null)
-                shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (_meshFilter.mesh == null)
+                _meshFilter.mesh = BuildQuad();
 
-            _material = new Material(shader);
+            if (_material == null)
+            {
+                Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
 
-            // Generate a radial falloff texture once (shared)
+                if (shader == null)
+                {
+                    Debug.LogError("[ImpactDiskVisualizer] URP Unlit shader not found");
+                    return;
+                }
+
+                _material = new Material(shader);
+
+                // FORCE visibility (URP uses _BaseColor)
+                _material.SetColor("_BaseColor", new Color(1f, 0f, 0f, 1f));
+
+                _material.SetFloat("_Surface", 1);   // Transparent
+                _material.SetFloat("_Blend", 0);     // Alpha
+                _material.SetFloat("_ZWrite", 0);
+                _material.renderQueue = 3000;
+            }
+
             if (_radialTexture == null)
                 _radialTexture = GenerateRadialTexture(256);
 
             _material.mainTexture = _radialTexture;
             _meshRenderer.material = _material;
+
+            _initialized = true;
         }
 
         void Update()
         {
+            if (!_initialized)
+                return;
+
+            // ---------- TEMPORARY TEST ----------
+            _meshRenderer.enabled = true;
+
+            Transform cam = Camera.main.transform;
+            transform.position = cam.position + cam.forward * 15f;
+            transform.position = new Vector3(transform.position.x, 2f, transform.position.z);
+            transform.localScale = new Vector3(20f, 1f, 20f);
+            transform.localScale = new Vector3(15f, 1f, 15f);
+            transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+            _material.SetColor("_BaseColor", new Color(1f, 0f, 0f, 1f));
+
+            // ---------- COMMENT THIS BACK IN AFTER TEST ----------
+            /*
             if (predictionRunner == null) return;
 
             FallPredictionResult p = predictionRunner.LatestPrediction;
@@ -63,28 +104,27 @@ namespace Presentation.Visualization
                 return;
             }
 
-            _meshRenderer.enabled = true;
-
-            // Position at impact point (slightly above ground)
             Vector3 pos = p.impactPointWorld;
             transform.position = new Vector3(pos.x, pos.y + yOffset, pos.z);
 
-            // Scale disk by drift radius
             float r = Mathf.Max(minRadiusMeters, p.horizontalDriftRadius);
-            // Quad is 1x1, so scale x/z to diameter
             transform.localScale = new Vector3(r * 2f, 1f, r * 2f);
 
-            // Color by risk (tinted radial texture)
             Color tint = RiskToColor(p.riskLevel);
             tint.a = alpha;
             _material.color = tint;
 
-            // Keep it flat
             transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            */
         }
         
         public void RefreshNow()
         {
+            // Force a single evaluation now (useful right after Predict button)
+            if (!_initialized)
+                OnEnable(); // ensures mesh/material exist if enable order was weird
+
+            // Do one pass of Update logic immediately
             Update();
         }
 
@@ -103,29 +143,23 @@ namespace Presentation.Visualization
         {
             Mesh m = new Mesh();
 
-            // XY plane quad; we rotate it later
             m.vertices = new[]
             {
                 new Vector3(-0.5f, 0f, -0.5f),
-                new Vector3( 0.5f, 0f, -0.5f),
-                new Vector3(-0.5f, 0f,  0.5f),
-                new Vector3( 0.5f, 0f,  0.5f),
+                new Vector3(0.5f, 0f, -0.5f),
+                new Vector3(-0.5f, 0f, 0.5f),
+                new Vector3(0.5f, 0f, 0.5f),
             };
 
             m.uv = new[]
             {
-                new Vector2(0,0),
-                new Vector2(1,0),
-                new Vector2(0,1),
-                new Vector2(1,1),
+                new Vector2(0, 0),
+                new Vector2(1, 0),
+                new Vector2(0, 1),
+                new Vector2(1, 1),
             };
 
-            m.triangles = new[]
-            {
-                0,2,1,
-                2,3,1
-            };
-
+            m.triangles = new[] { 0, 2, 1, 2, 3, 1 };
             m.RecalculateNormals();
             return m;
         }
@@ -136,26 +170,18 @@ namespace Presentation.Visualization
             tex.wrapMode = TextureWrapMode.Clamp;
             tex.filterMode = FilterMode.Bilinear;
 
-            float center = (size - 1) * 0.5f;
-            float maxDist = center;
+            float c = (size - 1) * 0.5f;
+            float max = c;
 
             for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
             {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = x - center;
-                    float dy = y - center;
-                    float d = Mathf.Sqrt(dx * dx + dy * dy) / maxDist; // 0..1
+                float dx = x - c;
+                float dy = y - c;
+                float d = Mathf.Sqrt(dx * dx + dy * dy) / max;
 
-                    // Make a smooth heat falloff (strong center -> transparent edge)
-                    float a = Mathf.Clamp01(1f - d);
-                    a *= a; // emphasize center
-
-                    // Hard cutoff outside circle
-                    if (d > 1f) a = 0f;
-
-                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
-                }
+                float a = d > 1f ? 0f : Mathf.Pow(1f - d, 2f);
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
             }
 
             tex.Apply();
