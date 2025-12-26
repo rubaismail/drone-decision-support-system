@@ -87,3 +87,4 @@ Thumbs.db
 # Extra build outputs
 [Bb]in/
 [Oo]ut/
+mono_crash.0.0.json
