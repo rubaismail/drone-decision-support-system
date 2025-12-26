@@ -45,27 +45,44 @@ namespace Presentation.Visualization
 
             if (_meshFilter.mesh == null)
                 _meshFilter.mesh = BuildQuad();
-
+            
             if (_material == null)
             {
                 Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-
-                if (shader == null)
-                {
-                    Debug.LogError("[ImpactDiskVisualizer] URP Unlit shader not found");
-                    return;
-                }
-
                 _material = new Material(shader);
+                
+                Debug.Log("ZTest property exists: " + _material.HasProperty("_ZTest"));
 
-                // FORCE visibility (URP uses _BaseColor)
-                _material.SetColor("_BaseColor", new Color(1f, 0f, 0f, 1f));
-
+                // FORCE VISIBILITY OVER EVERYTHING
+                _material.SetColor("_BaseColor", Color.red);
                 _material.SetFloat("_Surface", 1);   // Transparent
-                _material.SetFloat("_Blend", 0);     // Alpha
-                _material.SetFloat("_ZWrite", 0);
-                _material.renderQueue = 3000;
+                _material.SetFloat("_ZWrite", 0);    // Do NOT write depth
+                _material.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+
+                _material.renderQueue = 5000; // Overlay-level
             }
+
+
+            // if (_material == null)
+            // {
+            //     Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            //
+            //     if (shader == null)
+            //     {
+            //         Debug.LogError("[ImpactDiskVisualizer] URP Unlit shader not found");
+            //         return;
+            //     }
+            //
+            //     _material = new Material(shader);
+            //
+            //     // FORCE visibility (URP uses _BaseColor)
+            //     _material.SetColor("_BaseColor", new Color(1f, 0f, 0f, 1f));
+            //
+            //     _material.SetFloat("_Surface", 1);   // Transparent
+            //     _material.SetFloat("_Blend", 0);     // Alpha
+            //     _material.SetFloat("_ZWrite", 0);
+            //     _material.renderQueue = 3000;
+            // }
 
             if (_radialTexture == null)
                 _radialTexture = GenerateRadialTexture(256);
@@ -80,18 +97,26 @@ namespace Presentation.Visualization
         {
             if (!_initialized)
                 return;
-
-            // ---------- TEMPORARY TEST ----------
+            
             _meshRenderer.enabled = true;
 
-            Transform cam = Camera.main.transform;
-            transform.position = cam.position + cam.forward * 15f;
-            transform.position = new Vector3(transform.position.x, 2f, transform.position.z);
-            transform.localScale = new Vector3(20f, 1f, 20f);
-            transform.localScale = new Vector3(15f, 1f, 15f);
-            transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            transform.position = new Vector3(0f, 10f, 0f);
+            transform.localScale = new Vector3(50f, 1f, 50f);
+            transform.rotation = Quaternion.identity;
 
-            _material.SetColor("_BaseColor", new Color(1f, 0f, 0f, 1f));
+            // ---------- TEMPORARY TEST ----------
+            // _meshRenderer.enabled = true;
+            //
+            // Transform cam = Camera.main.transform;
+            // transform.position = cam.position + cam.forward * 15f;
+            // transform.position = new Vector3(transform.position.x, 2f, transform.position.z);
+            // transform.localScale = new Vector3(20f, 1f, 20f);
+            // transform.localScale = new Vector3(15f, 1f, 15f);
+            //
+            // _material.SetColor("_BaseColor", new Color(1f, 0f, 0f, 1f));
+            
+            
+            
 
             // ---------- COMMENT THIS BACK IN AFTER TEST ----------
             /*
@@ -159,7 +184,7 @@ namespace Presentation.Visualization
                 new Vector2(1, 1),
             };
 
-            m.triangles = new[] { 0, 2, 1, 2, 3, 1 };
+            m.triangles = new[] { 0, 1, 2, 2, 1, 3 };
             m.RecalculateNormals();
             return m;
         }
