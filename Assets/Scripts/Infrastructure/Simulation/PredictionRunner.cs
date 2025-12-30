@@ -16,9 +16,6 @@ namespace Infrastructure.Simulation
         [Header("Visualization")]
         [SerializeField] private ImpactDiskVisualizer impactDiskVisualizer;
 
-        [Header("Debug")]
-        public GameObject predictedImpactMarker;
-
         private DroneStateAssembler assembler;
         private FallPredictor predictor;
 
@@ -33,38 +30,23 @@ namespace Infrastructure.Simulation
 
             predictor = new FallPredictor();
         }
-
-        void Update()
-        {
-            DroneState state = assembler.BuildState();
-
-            LatestPrediction =
-                predictor.Predict(
-                    state,
-                    windProvider.GetWind()
-                );
-
-            if (!LatestPrediction.isValid)
-                return;
-
-            if (predictedImpactMarker != null)
-                predictedImpactMarker.transform.position =
-                    LatestPrediction.impactPointWorld;
-        }
+        
         public FallPredictionResult ComputePredictionNow()
         {
             DroneState state = assembler.BuildState();
 
-            LatestPrediction =
-                predictor.Predict(
-                    state,
-                    windProvider.GetWind()
-                );
+            LatestPrediction = predictor.Predict(state, windProvider.GetWind());
             
             if (impactDiskVisualizer != null)
                 impactDiskVisualizer.RefreshNow();
 
             return LatestPrediction;
+        }
+        
+        public void HideImpactVisualization()
+        {
+            if (impactDiskVisualizer != null)
+                impactDiskVisualizer.Hide();
         }
     }
 }

@@ -1,216 +1,221 @@
+using System;
+using System.Reflection;
 using Core.Data;
-using UnityEngine;
-using Core.Prediction;
 using Infrastructure.Simulation;
+using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 namespace Presentation.Visualization
 {
-    [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class ImpactDiskVisualizer : MonoBehaviour
     {
-        [Header("Data Source")] [SerializeField]
-        private PredictionRunner predictionRunner;
+        [Header("References")]
+        [SerializeField] private PredictionRunner predictionRunner;
+        [SerializeField] private DecalProjector decalProjector;
 
-        [Header("Disk Placement")] [SerializeField]
-        private float yOffset = 0.15f;
+        [Header("Decal Material (Shader Graph)")]
+        [Tooltip("Material asset that uses your Decal Shader Graph with _HeatmapTex, _TintColor, _Opacity.")]
+        [SerializeField] private Material decalMaterial;
 
-        [Header("Disk Appearance")] [SerializeField]
-        private float minRadiusMeters = 1.0f;
+        [Header("Sizing")]
+        [Tooltip("Extra padding added to the predicted drift radius (meters).")]
+        [SerializeField] private float radiusPadding = 0f;
 
-        [SerializeField] private float alpha = 0.55f;
+        [Tooltip("Clamps the radius so a bad value doesn't create a gigantic decal (meters).")]
+        [SerializeField] private float maxRadius = 2000f;
 
-        [Header("Risk Colors")] [SerializeField]
-        private Color lowRiskColor = new Color(0.1f, 1.0f, 0.1f, 1f);
+        [Tooltip("Minimum radius so it is always visible (meters).")]
+        [SerializeField] private float minRadiusMeters = 10f;
 
-        [SerializeField] private Color mediumRiskColor = new Color(1.0f, 0.8f, 0.1f, 1f);
-        [SerializeField] private Color highRiskColor = new Color(1.0f, 0.15f, 0.15f, 1f);
+        [Tooltip("Projection depth (meters). Keep big enough for uneven Cesium terrain.")]
+        [SerializeField] private float projectionDepth = 500f;
 
-        private MeshFilter _meshFilter;
-        private MeshRenderer _meshRenderer;
-        private Material _material;
-        private bool _initialized;
+        [Tooltip("Lift the projector slightly above the terrain to avoid clipping issues.")]
+        [SerializeField] private float heightOffset = 5f;
 
-        private static Texture2D _radialTexture;
-        
-        void OnEnable()
+        [Header("Orientation")]
+        [Tooltip("If enabled, forces the decal projector to aim straight down.")]
+        [SerializeField] private bool forceDownRotation = true;
+
+        [Header("Risk → Visual Mapping")]
+        [Tooltip("Opacity at risk01 = 0.")]
+        [Range(0f, 1f)]
+        [SerializeField] private float minOpacity = 0.15f;
+
+        [Tooltip("Opacity at risk01 = 1.")]
+        [Range(0f, 1f)]
+        [SerializeField] private float maxOpacity = 0.9f;
+
+        [Tooltip("Risk-to-color gradient (0 = low, 1 = high).")]
+        [SerializeField] private Gradient riskGradient;
+
+        [SerializeField] private LayerMask groundLayerMask = ~0; // default: everything
+
+        // --- MaterialPropertyBlock plumbing ---
+        private MaterialPropertyBlock _mpb;
+        private Action<MaterialPropertyBlock> _applyBlockToProjector; // reflection-safe setter
+
+        private static readonly int TintColorId = Shader.PropertyToID("_TintColor");
+        private static readonly int OpacityId = Shader.PropertyToID("_Opacity");
+
+        private void Awake()
         {
-            _meshFilter = GetComponent<MeshFilter>();
-            _meshRenderer = GetComponent<MeshRenderer>();
+            if (decalProjector == null)
+                decalProjector = GetComponent<DecalProjector>();
 
-            if (_meshFilter == null || _meshRenderer == null)
+            // Ensure projector has a material assigned (asset material, NOT instanced).
+            if (decalProjector != null && decalMaterial != null)
+                decalProjector.material = decalMaterial;
+
+            // Create MPB + find a way to apply it to DecalProjector (API differs by Unity/URP versions).
+            _mpb = new MaterialPropertyBlock();
+            _applyBlockToProjector = BuildProjectorPropertyBlockSetter(decalProjector);
+
+            // Default gradient if empty.
+            if (riskGradient == null || riskGradient.colorKeys == null || riskGradient.colorKeys.Length == 0)
             {
-                Debug.LogError("[ImpactDiskVisualizer] Missing Mesh components");
-                return;
+                riskGradient = new Gradient();
+                var colors = new GradientColorKey[3];
+                colors[0] = new GradientColorKey(Color.green, 0f);
+                colors[1] = new GradientColorKey(Color.yellow, 0.5f);
+                colors[2] = new GradientColorKey(Color.red, 1f);
+
+                var alphas = new GradientAlphaKey[2];
+                alphas[0] = new GradientAlphaKey(1f, 0f);
+                alphas[1] = new GradientAlphaKey(1f, 1f);
+
+                riskGradient.SetKeys(colors, alphas);
             }
 
-            if (_meshFilter.mesh == null)
-                _meshFilter.mesh = BuildQuad();
-            
-            if (_material == null)
-            {
-                Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-                _material = new Material(shader);
-                
-                Debug.Log("ZTest property exists: " + _material.HasProperty("_ZTest"));
-
-                // FORCE VISIBILITY OVER EVERYTHING
-                _material.SetColor("_BaseColor", Color.red);
-                _material.SetFloat("_Surface", 1);   // Transparent
-                _material.SetFloat("_ZWrite", 0);    // Do NOT write depth
-                _material.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
-
-                _material.renderQueue = 5000; // Overlay-level
-            }
-
-
-            // if (_material == null)
-            // {
-            //     Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-            //
-            //     if (shader == null)
-            //     {
-            //         Debug.LogError("[ImpactDiskVisualizer] URP Unlit shader not found");
-            //         return;
-            //     }
-            //
-            //     _material = new Material(shader);
-            //
-            //     // FORCE visibility (URP uses _BaseColor)
-            //     _material.SetColor("_BaseColor", new Color(1f, 0f, 0f, 1f));
-            //
-            //     _material.SetFloat("_Surface", 1);   // Transparent
-            //     _material.SetFloat("_Blend", 0);     // Alpha
-            //     _material.SetFloat("_ZWrite", 0);
-            //     _material.renderQueue = 3000;
-            // }
-
-            if (_radialTexture == null)
-                _radialTexture = GenerateRadialTexture(256);
-
-            _material.mainTexture = _radialTexture;
-            _meshRenderer.material = _material;
-
-            _initialized = true;
+            // Start hidden until a valid prediction is shown.
+            SetVisible(false);
         }
 
-        void Update()
-        {
-            if (!_initialized)
-                return;
-            
-            _meshRenderer.enabled = true;
-
-            transform.position = new Vector3(0f, 10f, 0f);
-            transform.localScale = new Vector3(50f, 1f, 50f);
-            transform.rotation = Quaternion.identity;
-
-            // ---------- TEMPORARY TEST ----------
-            // _meshRenderer.enabled = true;
-            //
-            // Transform cam = Camera.main.transform;
-            // transform.position = cam.position + cam.forward * 15f;
-            // transform.position = new Vector3(transform.position.x, 2f, transform.position.z);
-            // transform.localScale = new Vector3(20f, 1f, 20f);
-            // transform.localScale = new Vector3(15f, 1f, 15f);
-            //
-            // _material.SetColor("_BaseColor", new Color(1f, 0f, 0f, 1f));
-            
-            
-            
-
-            // ---------- COMMENT THIS BACK IN AFTER TEST ----------
-            /*
-            if (predictionRunner == null) return;
-
-            FallPredictionResult p = predictionRunner.LatestPrediction;
-            if (!p.isValid)
-            {
-                _meshRenderer.enabled = false;
-                return;
-            }
-
-            Vector3 pos = p.impactPointWorld;
-            transform.position = new Vector3(pos.x, pos.y + yOffset, pos.z);
-
-            float r = Mathf.Max(minRadiusMeters, p.horizontalDriftRadius);
-            transform.localScale = new Vector3(r * 2f, 1f, r * 2f);
-
-            Color tint = RiskToColor(p.riskLevel);
-            tint.a = alpha;
-            _material.color = tint;
-
-            transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            */
-        }
-        
+        /// <summary>
+        /// Called by PredictionRunner after ComputePredictionNow().
+        /// Pulls LatestPrediction and updates the decal projector.
+        /// </summary>
         public void RefreshNow()
         {
-            // Force a single evaluation now (useful right after Predict button)
-            if (!_initialized)
-                OnEnable(); // ensures mesh/material exist if enable order was weird
+            if (predictionRunner == null || decalProjector == null)
+                return;
 
-            // Do one pass of Update logic immediately
-            Update();
-        }
+            FallPredictionResult p = predictionRunner.LatestPrediction;
 
-        private Color RiskToColor(RiskLevel risk)
-        {
-            return risk switch
+            if (!p.isValid)
             {
-                RiskLevel.Low => lowRiskColor,
-                RiskLevel.Medium => mediumRiskColor,
-                RiskLevel.High => highRiskColor,
-                _ => mediumRiskColor
-            };
-        }
-
-        private static Mesh BuildQuad()
-        {
-            Mesh m = new Mesh();
-
-            m.vertices = new[]
-            {
-                new Vector3(-0.5f, 0f, -0.5f),
-                new Vector3(0.5f, 0f, -0.5f),
-                new Vector3(-0.5f, 0f, 0.5f),
-                new Vector3(0.5f, 0f, 0.5f),
-            };
-
-            m.uv = new[]
-            {
-                new Vector2(0, 0),
-                new Vector2(1, 0),
-                new Vector2(0, 1),
-                new Vector2(1, 1),
-            };
-
-            m.triangles = new[] { 0, 1, 2, 2, 1, 3 };
-            m.RecalculateNormals();
-            return m;
-        }
-
-        private static Texture2D GenerateRadialTexture(int size)
-        {
-            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            tex.wrapMode = TextureWrapMode.Clamp;
-            tex.filterMode = FilterMode.Bilinear;
-
-            float c = (size - 1) * 0.5f;
-            float max = c;
-
-            for (int y = 0; y < size; y++)
-            for (int x = 0; x < size; x++)
-            {
-                float dx = x - c;
-                float dy = y - c;
-                float d = Mathf.Sqrt(dx * dx + dy * dy) / max;
-
-                float a = d > 1f ? 0f : Mathf.Pow(1f - d, 2f);
-                tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+                SetVisible(false);
+                return;
             }
 
-            tex.Apply();
-            return tex;
+            // --- Position & terrain snap ---
+            Vector3 rayStart = new Vector3(
+                p.impactPointWorld.x,
+                predictionRunner.transform.position.y + 50f,
+                p.impactPointWorld.z
+            );
+
+            if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, 5000f, groundLayerMask))
+                transform.position = hit.point + Vector3.up * heightOffset;
+            else
+                transform.position = p.impactPointWorld + Vector3.up * heightOffset;
+
+            if (forceDownRotation)
+                transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+            // --- Size ---
+            float radius = Mathf.Max(minRadiusMeters, p.horizontalDriftRadius + radiusPadding);
+            radius = Mathf.Min(radius, maxRadius);
+
+            float diameter = radius * 2f;
+            decalProjector.size = new Vector3(diameter, diameter, projectionDepth);
+
+            // --- Risk -> Tint/Opacity (via MPB, NOT material.SetX) ---
+            float risk01 = Mathf.Clamp01(p.risk01);
+            Color tint = riskGradient.Evaluate(risk01);
+            float opacity = Mathf.Lerp(minOpacity, maxOpacity, risk01);
+
+            ApplyVisuals(tint, opacity);
+
+            SetVisible(true);
+        }
+
+        /// <summary>
+        /// Hide the decal (call this from Back button logic).
+        /// </summary>
+        public void Hide()
+        {
+            SetVisible(false);
+        }
+
+        private void ApplyVisuals(Color tintColor, float opacity)
+        {
+            if (_mpb == null)
+                return;
+
+            _mpb.Clear();
+            _mpb.SetColor(TintColorId, tintColor);
+            _mpb.SetFloat(OpacityId, opacity);
+
+            // Apply via whichever API exists on your DecalProjector build.
+            _applyBlockToProjector?.Invoke(_mpb);
+        }
+
+        private void SetVisible(bool visible)
+        {
+            if (decalProjector != null)
+                decalProjector.enabled = visible;
+        }
+
+        /// <summary>
+        /// URP DecalProjector property-block API differs across versions.
+        /// This finds a compatible method/property at runtime so your project compiles + works.
+        /// </summary>
+        private static Action<MaterialPropertyBlock> BuildProjectorPropertyBlockSetter(DecalProjector projector)
+        {
+            if (projector == null)
+                return null;
+
+            Type t = projector.GetType();
+
+            // 1) Try method: SetPropertyBlock(MaterialPropertyBlock)
+            MethodInfo mSet = t.GetMethod("SetPropertyBlock", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null, new[] { typeof(MaterialPropertyBlock) }, null);
+            if (mSet != null)
+            {
+                return (block) =>
+                {
+                    try { mSet.Invoke(projector, new object[] { block }); }
+                    catch { /* swallow */ }
+                };
+            }
+
+            // 2) Try property: materialPropertyBlock { get; set; }
+            PropertyInfo pBlock = t.GetProperty("materialPropertyBlock", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (pBlock != null && pBlock.CanWrite)
+            {
+                return (block) =>
+                {
+                    try { pBlock.SetValue(projector, block); }
+                    catch { /* swallow */ }
+                };
+            }
+
+            // 3) Try field: m_MaterialPropertyBlock or similar (last resort)
+            FieldInfo fBlock = t.GetField("m_MaterialPropertyBlock", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (fBlock != null)
+            {
+                return (block) =>
+                {
+                    try { fBlock.SetValue(projector, block); }
+                    catch { /* swallow */ }
+                };
+            }
+
+            // If nothing exists, we can't apply MPB on this version.
+            // (In that case decals will usually revert to default/white.)
+            Debug.LogWarning("[HEATMAP] DecalProjector does not expose a MaterialPropertyBlock API in this Unity/URP build.");
+            return null;
         }
     }
 }

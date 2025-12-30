@@ -22,8 +22,11 @@ namespace Core.Data
         // Energy proxy (Joules)
         public float impactEnergy;
 
-        // Qualitative risk
+        // Qualitative risk (for logic and UI)
         public RiskLevel riskLevel;
+        
+        // Continuous risk (for visuals, scaling, math)
+        public float risk01; // 0 = safe, 1 = catastrophic
 
         // Validity flag (important for edge cases)
         public bool isValid;

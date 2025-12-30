@@ -175,6 +175,7 @@ namespace Presentation.UI
 
         public void OnBackPressed()
         {
+            predictionRunner.HideImpactVisualization();
             ShowOperatorState();
         }
     }

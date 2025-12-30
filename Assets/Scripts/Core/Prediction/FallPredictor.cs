@@ -6,6 +6,9 @@ namespace Core.Prediction
     public class FallPredictor
     {
         private const float Gravity = 9.81f;
+        
+        private const float EnergyLowJ = 50f;     // below this ≈ Low
+        private const float EnergyHighJ = 200f;   // above this ≈ High
 
         public FallPredictionResult Predict(
             DroneState state,
@@ -45,8 +48,8 @@ namespace Core.Prediction
 
             // --- Horizontal drift ---
             Vector3 horizontalVelocity =
-                new Vector3(state.velocity.x, 0f, state.velocity.z) +
-                windVelocity;
+                new Vector3(state.velocity.x, 0f, state.velocity.z) 
+                + windVelocity;
 
             Vector3 impactPoint =
                 state.position +
@@ -56,22 +59,28 @@ namespace Core.Prediction
             float driftRadius = horizontalVelocity.magnitude * tImpact;
 
             // --- Impact energy proxy ---
-            float impactEnergy =
-                0.5f * state.mass *
-                (state.velocity.sqrMagnitude + windVelocity.sqrMagnitude);
-
-            // --- Risk classification (simple, defensible MVP) ---
-            RiskLevel risk =
-                impactEnergy < 50f ? RiskLevel.Low :
-                impactEnergy < 200f ? RiskLevel.Medium :
+            float impactSpeed = Gravity * tImpact; // v = g·t
+            float impactEnergy = 0.5f * state.mass * impactSpeed * impactSpeed;
+            
+            // --- Continuous risk (0..1) derived from energy ---
+            // Map EnergyLowJ -> 0, EnergyHighJ -> 1
+            float risk01 = Mathf.InverseLerp(EnergyLowJ, EnergyHighJ, impactEnergy);
+            risk01 = Mathf.Clamp01(risk01);
+            
+            // --- Qualitative risk derived from risk01 (keeps consistent) ---
+            RiskLevel riskLevel =
+                risk01 < 0.33f ? RiskLevel.Low :
+                risk01 < 0.66f ? RiskLevel.Medium :
                 RiskLevel.High;
+            
 
             // --- Populate result ---
             result.impactPointWorld = impactPoint;
             result.timeToImpact = tImpact;
             result.horizontalDriftRadius = driftRadius;
             result.impactEnergy = impactEnergy;
-            result.riskLevel = risk;
+            result.risk01 = risk01;
+            result.riskLevel = riskLevel;
             result.isValid = true;
 
             return result;
