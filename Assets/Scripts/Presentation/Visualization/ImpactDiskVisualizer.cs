@@ -22,10 +22,10 @@ namespace Presentation.Visualization
         [SerializeField] private float radiusPadding = 0f;
 
         [Tooltip("Clamps the radius so a bad value doesn't create a gigantic decal (meters).")]
-        [SerializeField] private float maxRadius = 2000f;
+        [SerializeField] private float maxRadius = 4000f;
 
         [Tooltip("Minimum radius so it is always visible (meters).")]
-        [SerializeField] private float minRadiusMeters = 10f;
+        [SerializeField] private float minRadiusMeters = 15f;
 
         [Tooltip("Projection depth (meters). Keep big enough for uneven Cesium terrain.")]
         [SerializeField] private float projectionDepth = 500f;
@@ -57,6 +57,12 @@ namespace Presentation.Visualization
 
         private static readonly int TintColorId = Shader.PropertyToID("_TintColor");
         private static readonly int OpacityId = Shader.PropertyToID("_Opacity");
+        
+        private bool _hasPrediction;
+        private FallPredictionResult _last;
+        
+        [Header("Brute Force Offset (applied AFTER raycast)")]
+        [SerializeField] private Vector3 bruteOffset = Vector3.zero;
 
         private void Awake()
         {
@@ -107,21 +113,39 @@ namespace Presentation.Visualization
                 SetVisible(false);
                 return;
             }
+            
+            _last = p;
+            _hasPrediction = true;
 
             // --- Position & terrain snap ---
-            Vector3 rayStart = new Vector3(
-                p.impactPointWorld.x,
-                predictionRunner.transform.position.y + 50f,
-                p.impactPointWorld.z
-            );
+            Transform droneTf = predictionRunner.droneStateProvider.DroneTransform;
 
+            // predicted impact (NO brute offset here)
+            Vector3 worldImpact = droneTf.position + p.impactOffsetXZ;
+
+            // raycast straight down from above predicted XZ
+            Vector3 rayStart = worldImpact + Vector3.up * 200f;
+
+            Vector3 basePos;
             if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, 5000f, groundLayerMask))
-                transform.position = hit.point + Vector3.up * heightOffset;
+                basePos = hit.point;
             else
-                transform.position = p.impactPointWorld + Vector3.up * heightOffset;
+                basePos = worldImpact;
+
+// FINAL position = snapped position + height lift + BRUTE FORCE offset
+            transform.position = basePos + Vector3.up * heightOffset + bruteOffset;
 
             if (forceDownRotation)
                 transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            
+            Vector3 dronePos = predictionRunner.droneStateProvider.DroneTransform.position;
+            Vector3 expectedNoRaycast = dronePos + p.impactOffsetXZ;
+
+            Debug.Log(
+                $"[OFFSET DEBUG] bruteOffset={bruteOffset} | " +
+                $"expectedNoRaycast={expectedNoRaycast} | actualDecalPos={transform.position}"
+            );
+            
 
             // --- Size ---
             float radius = Mathf.Max(minRadiusMeters, p.horizontalDriftRadius + radiusPadding);
@@ -136,17 +160,60 @@ namespace Presentation.Visualization
             float opacity = Mathf.Lerp(minOpacity, maxOpacity, risk01);
 
             ApplyVisuals(tint, opacity);
-
+            
+            Debug.DrawLine(
+                predictionRunner.droneStateProvider.DroneTransform.position,
+                predictionRunner.droneStateProvider.DroneTransform.position + p.impactOffsetXZ,
+                Color.magenta,
+                2f
+            );
+            
             SetVisible(true);
         }
+        // private void LateUpdate()
+        // {
+        //     if (!_hasPrediction || decalProjector == null || !decalProjector.enabled)
+        //         return;
+        //
+        //     Transform droneTf = predictionRunner.droneStateProvider.DroneTransform;
+        //
+        //     // predicted impact (NO physics recompute)
+        //     Vector3 worldImpact = droneTf.position + _last.impactOffsetXZ;
+        //
+        //     Vector3 rayStart = worldImpact + Vector3.up * 200f;
+        //
+        //     Vector3 basePos;
+        //     if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, 5000f, groundLayerMask))
+        //         basePos = hit.point;
+        //     else
+        //         basePos = worldImpact;
+        //
+        //     // FINAL brute-force placement
+        //     transform.position = basePos + Vector3.up * heightOffset + bruteOffset;
+        // }
 
         /// <summary>
-        /// Hide the decal (call this from Back button logic).
+        /// Hides the decal (called from Back button logic).
         /// </summary>
         public void Hide()
         {
             SetVisible(false);
         }
+        
+        // private void LateUpdate()
+        // {
+        //     if (!_hasPrediction || decalProjector == null || !decalProjector.enabled) return;
+        //
+        //     // Re-apply just the position each frame to survive Cesium recentering
+        //     Transform droneTf = predictionRunner.droneStateProvider.DroneTransform;
+        //     Vector3 worldImpact = droneTf.position + _last.impactOffsetXZ;
+        //
+        //     Vector3 rayStart = worldImpact + Vector3.up * 50f;
+        //     if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, 5000f, groundLayerMask))
+        //         transform.position = hit.point + Vector3.up * heightOffset;
+        //     else
+        //         transform.position = worldImpact + Vector3.up * heightOffset;
+        // }
 
         private void ApplyVisuals(Color tintColor, float opacity)
         {
@@ -156,8 +223,7 @@ namespace Presentation.Visualization
             _mpb.Clear();
             _mpb.SetColor(TintColorId, tintColor);
             _mpb.SetFloat(OpacityId, opacity);
-
-            // Apply via whichever API exists on your DecalProjector build.
+            
             _applyBlockToProjector?.Invoke(_mpb);
         }
 

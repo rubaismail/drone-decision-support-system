@@ -10,15 +10,9 @@ namespace Core.Prediction
         private const float EnergyLowJ = 50f;     // below this ≈ Low
         private const float EnergyHighJ = 200f;   // above this ≈ High
 
-        public FallPredictionResult Predict(
-            DroneState state,
-            WindData wind
-        )
+        public FallPredictionResult Predict(DroneState state, WindData wind)
         {
-            FallPredictionResult result = new FallPredictionResult
-            {
-                isValid = false
-            };
+            FallPredictionResult result = new FallPredictionResult { isValid = false };
 
             // --- Vertical motion ---
             float y0 = state.altitudeAboveGround;
@@ -41,26 +35,41 @@ namespace Core.Prediction
             // --- Wind → world-space velocity ---
             float radians = wind.direction * Mathf.Deg2Rad;
             Vector3 windVelocity = new Vector3(
-                Mathf.Sin(radians),
+                Mathf.Sin(radians),        // +X = East
                 0f,
-                Mathf.Cos(radians)
+                Mathf.Cos(radians)         // +Z = North
             ) * wind.speed;
 
             // --- Horizontal drift ---
             Vector3 horizontalVelocity =
                 new Vector3(state.velocity.x, 0f, state.velocity.z) 
                 + windVelocity;
-
-            Vector3 impactPoint =
-                state.position +
-                horizontalVelocity * tImpact +
-                Vector3.down * y0;
+            
+            // Horizontal-only impact prediction (Y resolved later by ground snap)
+            Vector3 impactOffsetXZ = new Vector3(
+                horizontalVelocity.x * tImpact,
+                0f,
+                horizontalVelocity.z * tImpact
+            );
 
             float driftRadius = horizontalVelocity.magnitude * tImpact;
+            
+            // --- Impact energy (physically grounded) ---
+            // Vertical impact speed from kinematics: v^2 = v0^2 + 2gh
+            float vImpactY = Mathf.Sqrt(
+                state.velocity.y * state.velocity.y +
+                2f * Gravity * state.altitudeAboveGround
+            );
 
-            // --- Impact energy proxy ---
-            float impactSpeed = Gravity * tImpact; // v = g·t
-            float impactEnergy = 0.5f * state.mass * impactSpeed * impactSpeed;
+            // Horizontal velocity at impact (approx constant)
+            Vector3 vImpact = new Vector3(
+                state.velocity.x + windVelocity.x,
+                -vImpactY,
+                state.velocity.z + windVelocity.z
+            );
+
+            // Kinetic energy at impact
+            float impactEnergy = 0.5f * state.mass * vImpact.sqrMagnitude;
             
             // --- Continuous risk (0..1) derived from energy ---
             // Map EnergyLowJ -> 0, EnergyHighJ -> 1
@@ -73,15 +82,56 @@ namespace Core.Prediction
                 risk01 < 0.66f ? RiskLevel.Medium :
                 RiskLevel.High;
             
+            // --- Recommendation logic ---
+            float maxSafeDelay = Mathf.Min(tImpact * 0.7f, 3f); // cap delay window
+            float bestDelay = 0f;
+            float bestRiskReduction = 0f;
 
+            for (float delay = 0.1f; delay <= maxSafeDelay; delay += 0.1f)
+            {
+                // altitude remaining at strike time
+                float hRemaining =
+                    state.altitudeAboveGround +
+                    state.velocity.y * delay -
+                    0.5f * Gravity * delay * delay;
+
+                if (hRemaining <= 0f)
+                    break;
+
+                float postStrikeEnergy = state.mass * Gravity * hRemaining;
+
+                float postRisk01 = Mathf.InverseLerp(EnergyLowJ, EnergyHighJ, postStrikeEnergy);
+                postRisk01 = Mathf.Clamp01(postRisk01);
+
+                float reduction = (risk01 - postRisk01) / Mathf.Max(risk01, 0.0001f);
+
+                if (reduction > bestRiskReduction)
+                {
+                    bestRiskReduction = reduction;
+                    bestDelay = delay;
+                }
+            }
+            
             // --- Populate result ---
-            result.impactPointWorld = impactPoint;
+            
+            //a best-guess world point for UI/debug only
+            result.impactPointWorld = state.position + impactOffsetXZ;
+            
+            result.impactOffsetXZ = impactOffsetXZ;
             result.timeToImpact = tImpact;
             result.horizontalDriftRadius = driftRadius;
             result.impactEnergy = impactEnergy;
             result.risk01 = risk01;
             result.riskLevel = riskLevel;
+            result.recommendedDelaySeconds = bestDelay;
+            result.riskReductionPercent = bestRiskReduction * 100f;
             result.isValid = true;
+            
+            Debug.Log(
+                $"[PREDICT] DronePos={state.position} | " +
+                $"HorizVel={horizontalVelocity} | tImpact={tImpact:F2}s | " +
+                $"Offset={impactOffsetXZ} | ImpactGuess={result.impactPointWorld}"
+            );
 
             return result;
         }

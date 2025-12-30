@@ -13,9 +13,12 @@ namespace Core.Data
     public struct FallPredictionResult
     {
         // Core prediction
-        public Vector3 impactPointWorld;
         public float timeToImpact;
-
+            // relative offset from drone in Unity world space (XZ only)
+        public Vector3 impactOffsetXZ;
+        
+        public Vector3 impactPointWorld;   // debug only
+        
         // Horizontal uncertainty / drift
         public float horizontalDriftRadius;
 
@@ -27,6 +30,9 @@ namespace Core.Data
         
         // Continuous risk (for visuals, scaling, math)
         public float risk01; // 0 = safe, 1 = catastrophic
+        
+        public float recommendedDelaySeconds;
+        public float riskReductionPercent; // 0–100
 
         // Validity flag (important for edge cases)
         public bool isValid;

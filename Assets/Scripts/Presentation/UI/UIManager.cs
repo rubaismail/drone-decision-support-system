@@ -165,10 +165,17 @@ namespace Presentation.UI
             riskLevelText.text =
                 $"Risk Level: {prediction.riskLevel}";
 
-            recommendationText.text =
-                prediction.timeToImpact < 3f
-                    ? "Recommendation: Delay neutralization"
-                    : "Recommendation: Neutralize now";
+            if (prediction.recommendedDelaySeconds > 0.5f)
+            {
+                recommendationText.text =
+                    $"Delay {prediction.recommendedDelaySeconds:F1}s\n" +
+                    $"Risk ↓ {prediction.riskReductionPercent:F0}%";
+            }
+            else
+            {
+                recommendationText.text =
+                    "Immediate neutralization recommended";
+            }
 
             ShowResultsState();
         }

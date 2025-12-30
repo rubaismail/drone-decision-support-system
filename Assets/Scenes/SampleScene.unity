@@ -964,6 +964,7 @@ MonoBehaviour:
   groundLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  bruteOffset: {x: 106, y: 0, z: 40}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -5643,6 +5644,7 @@ MonoBehaviour:
   groundLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  bruteOffset: {x: 0, y: 0, z: 0}
 --- !u!23 &1773491816
 MeshRenderer:
   m_ObjectHideFlags: 0
