@@ -7,8 +7,72 @@ namespace Core.Prediction
     {
         private const float Gravity = 9.81f;
         
+        // TODO: These should be tuned later with data (or replaced by ML)
         private const float EnergyLowJ = 50f;     // below this ≈ Low
         private const float EnergyHighJ = 200f;   // above this ≈ High
+        
+            private struct MethodProfile
+        {
+            public float horizontalVelocityScale;   // scales lateral motion after neutralization
+            public float timeScale;                 // scales descent time (e.g., partial thrust loss)
+            public float energyScale;               // scales impact energy (e.g., tether capture)
+            public float extraUncertaintyMeters;    // adds drift radius uncertainty (e.g., explosive disable)
+        }
+
+        private static MethodProfile GetProfile(NeutralizationMethod method)
+        {
+            // These are MVP placeholders — *documented* and *replaceable* later.
+            switch (method)
+            {
+                case NeutralizationMethod.MotorCutoff:
+                    return new MethodProfile
+                    {
+                        horizontalVelocityScale = 1f,
+                        timeScale = 1f,
+                        energyScale = 1f,
+                        extraUncertaintyMeters = 0f
+                    };
+
+                case NeutralizationMethod.PartialThrustLoss:
+                    // “Falls slower” / “some control remains briefly”
+                    return new MethodProfile
+                    {
+                        horizontalVelocityScale = 0.8f,
+                        timeScale = 1.25f,
+                        energyScale = 1f,
+                        extraUncertaintyMeters = 5f
+                    };
+
+                case NeutralizationMethod.ExplosiveDisable:
+                    // Adds uncertainty due to breakup / impulse
+                    return new MethodProfile
+                    {
+                        horizontalVelocityScale = 1.2f,
+                        timeScale = 1f,
+                        energyScale = 1f,
+                        extraUncertaintyMeters = 25f
+                    };
+
+                case NeutralizationMethod.TetheredCapture:
+                    // Captured → much lower energy, near-vertical
+                    return new MethodProfile
+                    {
+                        horizontalVelocityScale = 0.1f,
+                        timeScale = 1f,
+                        energyScale = 0.2f,
+                        extraUncertaintyMeters = 2f
+                    };
+
+                default:
+                    return new MethodProfile
+                    {
+                        horizontalVelocityScale = 1f,
+                        timeScale = 1f,
+                        energyScale = 1f,
+                        extraUncertaintyMeters = 0f
+                    };
+            }
+        }
 
         public FallPredictionResult Predict(DroneState state, WindData wind)
         {
@@ -26,8 +90,7 @@ namespace Core.Prediction
             if (discriminant < 0f)
                 return result;
 
-            float tImpact =
-                (-b - Mathf.Sqrt(discriminant)) / (2f * a);
+            float tImpact = (-b - Mathf.Sqrt(discriminant)) / (2f * a);
 
             if (tImpact <= 0f)
                 return result;

@@ -42,6 +42,9 @@ namespace Presentation.UI
         [Header("=== DRONE REFERENCES ===")]
         public Transform droneTransform;
         public DroneWanderController droneController;
+        
+        [Header("Neutralization")]
+        [SerializeField] private DroneNeutralizationController neutralizationController;
 
         private CesiumGlobeAnchor globeAnchor;
 
@@ -78,6 +81,7 @@ namespace Presentation.UI
 
         void ShowOperatorState()
         {
+            Debug.Log("[UI] ShowOperatorState");
             telemetryPanel.SetActive(true);
             inputPanel.SetActive(true);
             outputPanel.SetActive(false);
@@ -85,6 +89,7 @@ namespace Presentation.UI
 
         void ShowResultsState()
         {
+            Debug.Log("[UI] ShowResultsState");
             telemetryPanel.SetActive(false);
             inputPanel.SetActive(false);
             outputPanel.SetActive(true);
@@ -147,12 +152,13 @@ namespace Presentation.UI
 
         public void OnPredictPressed()
         {
-            //Debug.Log("PREDICT BUTTON CLICKED");
+            Debug.Log("PREDICT BUTTON CLICKED");
             
             var prediction = predictionRunner.ComputePredictionNow();
 
             if (!prediction.isValid)
             {
+                Debug.LogWarning("[UI] Prediction INVALID — staying in Operator state");
                 impactTimeText.text = "Time to Impact: --";
                 riskLevelText.text = "Risk Level: --";
                 recommendationText.text = "Recommendation: Invalid prediction";
@@ -179,9 +185,15 @@ namespace Presentation.UI
 
             ShowResultsState();
         }
+        
+        public void OnNeutralizePressed()
+        {
+            neutralizationController.NeutralizeNow();
+        }
 
         public void OnBackPressed()
         {
+            Debug.Log("[UI] Back pressed");
             predictionRunner.HideImpactVisualization();
             ShowOperatorState();
         }
