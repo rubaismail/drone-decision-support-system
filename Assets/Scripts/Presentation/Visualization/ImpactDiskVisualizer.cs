@@ -49,7 +49,7 @@ namespace Presentation.Visualization
         [Tooltip("Risk-to-color gradient (0 = low, 1 = high).")]
         [SerializeField] private Gradient riskGradient;
 
-        [SerializeField] private LayerMask groundLayerMask = ~0; // default: everything
+        [SerializeField] private LayerMask groundLayerMask = ~0;
 
         // --- MaterialPropertyBlock plumbing ---
         private MaterialPropertyBlock _mpb;

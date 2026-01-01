@@ -34,7 +34,11 @@ namespace Infrastructure.Simulation
 
             if (_hasCachedGround)
             {
-                altitudeAGL = baseState.position.y - _lastGroundHeight;
+                float rawAGL = baseState.position.y - _lastGroundHeight;
+
+                // Subtract drone geometry so "on ground" ≈ 0m
+                altitudeAGL = Mathf.Max(0f, rawAGL - baseState.bottomOffsetMeters);
+                //altitudeAGL = Mathf.Max(0f, baseState.position.y - _lastGroundHeight);
             }
             else
             {
@@ -48,7 +52,8 @@ namespace Infrastructure.Simulation
                 forward: baseState.forward,
                 mass: baseState.mass,
                 altitudeAboveGround: altitudeAGL,
-                timestamp: Time.time
+                timestamp: Time.time,
+                bottomOffsetMeters: baseState.bottomOffsetMeters
             );
         }
     }

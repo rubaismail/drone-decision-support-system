@@ -1160,7 +1160,7 @@ MonoBehaviour:
     m_NumAlphaKeys: 2
   groundLayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -6357,6 +6357,7 @@ MonoBehaviour:
   droneRigidbody: {fileID: 1812797779}
   georeference: {fileID: 1146479806}
   massKg: 2
+  bottomOffsetMeters: 2
 --- !u!114 &1812797786
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6421,7 +6422,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1866646134}
   - component: {fileID: 1866646135}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Google Photorealistic 3D Tiles
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6517,7 +6518,7 @@ MonoBehaviour:
   raycastDistance: 5000
   groundLayers:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 64
 --- !u!4 &1939402706
 Transform:
   m_ObjectHideFlags: 0

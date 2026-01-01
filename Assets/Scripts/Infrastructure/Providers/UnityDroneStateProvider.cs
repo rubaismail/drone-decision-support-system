@@ -15,7 +15,15 @@ namespace Infrastructure.Providers
         [Header("Physical Properties")] [SerializeField]
         private float massKg = 2.0f;
         
+        [Header("Geometry")]
+        [SerializeField] private float bottomOffsetMeters = 0.0f;
+        
         public Transform DroneTransform => droneTransform;
+        
+        public void SetMassKg(float newMassKg)
+        {
+            massKg = Mathf.Max(0.05f, newMassKg); // safety floor
+        }
 
         public DroneState GetCurrentState()
         {
@@ -25,7 +33,8 @@ namespace Infrastructure.Providers
                 velocity = droneRigidbody.linearVelocity,
                 forward   = droneTransform.forward,
                 mass = massKg,
-                timestamp = Time.time
+                timestamp = Time.time,
+                bottomOffsetMeters = bottomOffsetMeters
             };
         }
     }

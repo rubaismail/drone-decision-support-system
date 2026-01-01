@@ -1,4 +1,5 @@
 using Core.Data;
+using Core.Recommendation;
 using UnityEngine;
 
 namespace Core.Prediction
@@ -8,8 +9,8 @@ namespace Core.Prediction
         private const float Gravity = 9.81f;
         
         // TODO: These should be tuned later with data (or replaced by ML)
-        private const float EnergyLowJ = 50f;     // below this ≈ Low
-        private const float EnergyHighJ = 200f;   // above this ≈ High
+        private const float EnergyLowJ = 100f;     // below this ≈ Low
+        private const float EnergyHighJ = 800f;   // above this ≈ High
         
             private struct MethodProfile
         {
@@ -145,35 +146,17 @@ namespace Core.Prediction
                 risk01 < 0.66f ? RiskLevel.Medium :
                 RiskLevel.High;
             
-            // --- Recommendation logic ---
-            float maxSafeDelay = Mathf.Min(tImpact * 0.7f, 3f); // cap delay window
-            float bestDelay = 0f;
-            float bestRiskReduction = 0f;
-
-            for (float delay = 0.1f; delay <= maxSafeDelay; delay += 0.1f)
-            {
-                // altitude remaining at strike time
-                float hRemaining =
-                    state.altitudeAboveGround +
-                    state.velocity.y * delay -
-                    0.5f * Gravity * delay * delay;
-
-                if (hRemaining <= 0f)
-                    break;
-
-                float postStrikeEnergy = state.mass * Gravity * hRemaining;
-
-                float postRisk01 = Mathf.InverseLerp(EnergyLowJ, EnergyHighJ, postStrikeEnergy);
-                postRisk01 = Mathf.Clamp01(postRisk01);
-
-                float reduction = (risk01 - postRisk01) / Mathf.Max(risk01, 0.0001f);
-
-                if (reduction > bestRiskReduction)
-                {
-                    bestRiskReduction = reduction;
-                    bestDelay = delay;
-                }
-            }
+            // --- Recommendation (delegated) ---
+            ImpactRecommendationEngine.Evaluate(
+                state,
+                wind,
+                tImpact,
+                impactEnergy,
+                EnergyLowJ,
+                EnergyHighJ,
+                out float bestDelay,
+                out float riskReduction01
+            );
             
             // --- Populate result ---
             
@@ -187,7 +170,7 @@ namespace Core.Prediction
             result.risk01 = risk01;
             result.riskLevel = riskLevel;
             result.recommendedDelaySeconds = bestDelay;
-            result.riskReductionPercent = bestRiskReduction * 100f;
+            result.riskReductionPercent = riskReduction01 * 100f;
             result.isValid = true;
             
             Debug.Log(

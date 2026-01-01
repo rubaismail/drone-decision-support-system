@@ -1,4 +1,5 @@
 using CesiumForUnity;
+using Core.Data;
 using Infrastructure.Drone;
 using Infrastructure.Providers;
 using Infrastructure.Simulation;
@@ -64,6 +65,19 @@ namespace Presentation.UI
             // Initialize provider from UI defaults
             OnWindSpeedChanged(windSpeedSlider.value);
             OnWindDirectionChanged(windDirectionSlider.value);
+            
+            weightDropdown.ClearOptions();
+            weightDropdown.AddOptions(new System.Collections.Generic.List<string>
+            {
+                "Light (250 g)",
+                "Medium (1 kg)",
+                "Heavy (3.5 kg)"
+            });
+
+            weightDropdown.onValueChanged.AddListener(OnWeightChanged);
+
+            // Initialize mass from default dropdown value
+            OnWeightChanged(weightDropdown.value);
         }
 
         void Update()
@@ -104,7 +118,13 @@ namespace Presentation.UI
             if (droneTransform == null || droneController == null || globeAnchor == null)
                 return;
 
-            float altitude = (float)globeAnchor.height;
+            float altitude = 0f;
+
+            if (predictionRunner != null)
+            {
+                DroneState liveState = predictionRunner.GetLiveDroneState();
+                altitude = liveState.altitudeAboveGround;
+            }
             float speed = droneController.currentSpeed;
 
             altitudeText.text = $"Altitude: {altitude:F1} m";
@@ -132,6 +152,24 @@ namespace Presentation.UI
             windProvider.SetWindDirection(value);
             windDirectionValue.text =
                 $"{value:F0}° ({DegreesToCardinal(value)})";
+        }
+        
+        void OnWeightChanged(int index)
+        {
+            if (predictionRunner == null || predictionRunner.droneStateProvider == null)
+                return;
+
+            float massKg = index switch
+            {
+                (int)DroneWeightClass.Light  => 0.25f,
+                (int)DroneWeightClass.Medium => 1.00f,
+                (int)DroneWeightClass.Heavy  => 3.50f,
+                _ => 1.00f
+            };
+
+            predictionRunner.droneStateProvider.SetMassKg(massKg);
+
+            Debug.Log($"[UI] Drone mass set to {massKg} kg");
         }
 
         string DegreesToCardinal(float degrees)
@@ -175,7 +213,7 @@ namespace Presentation.UI
             {
                 recommendationText.text =
                     $"Delay {prediction.recommendedDelaySeconds:F1}s\n" +
-                    $"Risk ↓ {prediction.riskReductionPercent:F0}%";
+                    $"Relative Risk ↓ {prediction.riskReductionPercent:F0}%";
             }
             else
             {

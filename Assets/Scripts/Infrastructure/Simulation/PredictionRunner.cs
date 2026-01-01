@@ -15,15 +15,18 @@ namespace Infrastructure.Simulation
         
         [Header("Visualization")]
         [SerializeField] private ImpactDiskVisualizer impactDiskVisualizer;
+        
+        public DroneState LatestDroneState { get; private set; }
+        public DroneStateAssembler Assembler { get; private set; }
 
-        private DroneStateAssembler assembler;
         private FallPredictor predictor;
 
         public FallPredictionResult LatestPrediction { get; private set; }
+        public bool HasDroneState { get; private set; }
 
         void Awake()
         {
-            assembler = new DroneStateAssembler(
+            Assembler = new DroneStateAssembler(
                 droneStateProvider,
                 groundHeightProvider
             );
@@ -31,9 +34,16 @@ namespace Infrastructure.Simulation
             predictor = new FallPredictor();
         }
         
+        public DroneState GetLiveDroneState()
+        {
+            return Assembler.BuildState();
+        }
+        
         public FallPredictionResult ComputePredictionNow()
         {
-            DroneState state = assembler.BuildState();
+            DroneState state = Assembler.BuildState();
+            LatestDroneState = state;
+            HasDroneState = true;
 
             LatestPrediction = predictor.Predict(state, windProvider.GetWind());
             

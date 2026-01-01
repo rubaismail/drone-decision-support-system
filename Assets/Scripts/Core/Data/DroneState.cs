@@ -17,6 +17,8 @@ namespace Core.Data
         public float altitudeAboveGround; // meters (computed externally)
         
         public float timestamp;           // Time.time when sampled
+        
+        public float bottomOffsetMeters;
 
         public DroneState(
             Vector3 position,
@@ -24,7 +26,8 @@ namespace Core.Data
             Vector3 forward,
             float mass,
             float altitudeAboveGround,
-            float timestamp
+            float timestamp,
+            float bottomOffsetMeters
         )
         {
             this.position = position;
@@ -33,6 +36,7 @@ namespace Core.Data
             this.mass = mass;
             this.altitudeAboveGround = altitudeAboveGround;
             this.timestamp = timestamp;
+            this.bottomOffsetMeters = bottomOffsetMeters;
         }
     }
 }
