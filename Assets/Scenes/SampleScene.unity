@@ -4784,8 +4784,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 18
+  m_fontSizeBase: 18
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -6203,6 +6203,7 @@ GameObject:
   - component: {fileID: 1812797786}
   - component: {fileID: 1812797787}
   - component: {fileID: 1812797788}
+  - component: {fileID: 1812797789}
   m_Layer: 3
   m_Name: DroneRoot
   m_TagString: Untagged
@@ -6389,6 +6390,7 @@ MonoBehaviour:
   flightControllers:
   - {fileID: 1812797783}
   - {fileID: 1812797782}
+  outcomeRecorder: {fileID: 0}
 --- !u!136 &1812797788
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -6412,6 +6414,26 @@ CapsuleCollider:
   m_Height: 2.2
   m_Direction: 0
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1812797789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812797777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: beedaf90620c6438d86e1521b182bdd9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Infrastructure.Simulation.ImpactOutcomeRecorder
+  predictionRunner: {fileID: 1349887533}
+  rb: {fileID: 1812797779}
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  groundProbeDistance: 2
+  minImpactSpeed: 0.1
+  groundHeightProvider: {fileID: 1939402705}
 --- !u!1 &1866646133
 GameObject:
   m_ObjectHideFlags: 0

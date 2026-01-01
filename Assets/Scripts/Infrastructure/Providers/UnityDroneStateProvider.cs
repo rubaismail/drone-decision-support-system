@@ -18,6 +18,10 @@ namespace Infrastructure.Providers
         [Header("Geometry")]
         [SerializeField] private float bottomOffsetMeters = 0.0f;
         
+        private Vector3 _lastPosition;
+        private float _lastSampleTime;
+        private bool _hasPreviousSample;
+        
         public Transform DroneTransform => droneTransform;
         
         public void SetMassKg(float newMassKg)
@@ -27,10 +31,28 @@ namespace Infrastructure.Providers
 
         public DroneState GetCurrentState()
         {
+            Vector3 currentPosition = droneTransform.position;
+            float currentTime = Time.time;
+
+            Vector3 computedVelocity = Vector3.zero;
+
+            if (_hasPreviousSample)
+            {
+                float dt = currentTime - _lastSampleTime;
+                if (dt > Mathf.Epsilon)
+                {
+                    computedVelocity = (currentPosition - _lastPosition) / dt;
+                }
+            }
+
+            _lastPosition = currentPosition;
+            _lastSampleTime = currentTime;
+            _hasPreviousSample = true;
+            
             return new DroneState
             {
                 position = droneTransform.position,
-                velocity = droneRigidbody.linearVelocity,
+                velocity = computedVelocity,
                 forward   = droneTransform.forward,
                 mass = massKg,
                 timestamp = Time.time,

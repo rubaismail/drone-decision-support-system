@@ -13,6 +13,8 @@ namespace Infrastructure.Simulation
 
         [Header("Flight Control Scripts (to disable on neutralization)")]
         [SerializeField] private MonoBehaviour[] flightControllers;
+        
+        [SerializeField] private ImpactOutcomeRecorder outcomeRecorder;
 
         private Rigidbody _rb;
         private bool _isNeutralized = false;
@@ -54,6 +56,8 @@ namespace Infrastructure.Simulation
             _rb.isKinematic = false;
             _rb.useGravity = true;
             _rb.linearVelocity = initialVelocity;
+            
+            outcomeRecorder?.OnNeutralized();
 
             Debug.Log(
                 $"[NEUTRALIZE] Drone neutralized.\n" +
