@@ -6204,6 +6204,7 @@ GameObject:
   - component: {fileID: 1812797787}
   - component: {fileID: 1812797788}
   - component: {fileID: 1812797789}
+  - component: {fileID: 1812797790}
   m_Layer: 3
   m_Name: DroneRoot
   m_TagString: Untagged
@@ -6253,7 +6254,7 @@ Rigidbody:
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!114 &1812797781
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6408,7 +6409,7 @@ CapsuleCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Radius: 0.4
   m_Height: 2.2
@@ -6430,10 +6431,28 @@ MonoBehaviour:
   rb: {fileID: 1812797779}
   groundLayers:
     serializedVersion: 2
-    m_Bits: 64
-  groundProbeDistance: 2
-  minImpactSpeed: 0.1
-  groundHeightProvider: {fileID: 1939402705}
+    m_Bits: 65
+--- !u!65 &1812797790
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812797777}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.8, y: 0.8, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1866646133
 GameObject:
   m_ObjectHideFlags: 0

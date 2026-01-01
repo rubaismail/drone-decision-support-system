@@ -1,6 +1,5 @@
-using UnityEngine;
 using Core.Data;
-using Infrastructure.Providers;
+using UnityEngine;
 
 namespace Infrastructure.Simulation
 {
@@ -10,97 +9,55 @@ namespace Infrastructure.Simulation
         [Header("References")]
         [SerializeField] private PredictionRunner predictionRunner;
         [SerializeField] private Rigidbody rb;
-        
-        [Header("Ground Detection")]
+
+        [Header("Optional Filtering")]
+        [Tooltip("Optional: restrict impact detection to these layers (e.g. Ground / CesiumTerrain). Leave empty to accept any collision.")]
         [SerializeField] private LayerMask groundLayers;
-        [SerializeField] private float groundProbeDistance = 2.0f;
-        [SerializeField] private float minImpactSpeed = 0.1f;
-        [SerializeField] private UnityGroundHeightProvider groundHeightProvider;
-        private float _lastAltitudeAGL = float.PositiveInfinity;
 
         private bool _isTracking;
+        private bool _impactConfirmed;
         private float _neutralizeTime;
 
         private FallPredictionResult _predicted;
 
-        void Awake()
+        private void Awake()
         {
             if (rb == null)
                 rb = GetComponent<Rigidbody>();
         }
 
+        /// <summary>
+        /// Called when the drone is neutralized and begins falling.
+        /// </summary>
         public void OnNeutralized()
         {
+            Debug.Log("[IMPACT RECORDER] OnNeutralized called");
+            
             if (predictionRunner == null)
                 return;
 
             _predicted = predictionRunner.LatestPrediction;
             _neutralizeTime = Time.time;
+
             _isTracking = true;
+            _impactConfirmed = false;
         }
 
-        void OnCollisionEnter(Collision collision)   // fall-back, but most likely won't work for cesium meshes
+        /// <summary>
+        /// Authoritative impact trigger.
+        /// Uses collision events only — no inferred thresholds.
+        /// </summary>
+        private void OnCollisionEnter(Collision collision)
         {
+            // debugging
+            Debug.Log($"[IMPACT RECORDER] isTracking={_isTracking}");
+
             if (!_isTracking)
                 return;
-            
-            int otherLayer = collision.gameObject.layer;
-            if ((groundLayers.value & (1 << otherLayer)) == 0)
-                return;
 
+            // Latch immediately
             _isTracking = false;
-
-            float actualTimeToImpact = Time.time - _neutralizeTime;
-            Vector3 actualImpactPoint = collision.contacts[0].point;
-            Vector3 impactVelocity = rb.linearVelocity;
-
-            float actualImpactEnergy =
-                0.5f * rb.mass * impactVelocity.sqrMagnitude;
-
-            float positionError =
-                Vector3.Distance(
-                    _predicted.impactPointWorld,
-                    actualImpactPoint
-                );
-
-            Debug.Log(
-                $"[IMPACT ANALYSIS]\n" +
-                $"Predicted TTI: {_predicted.timeToImpact:F2}s\n" +
-                $"Actual TTI: {actualTimeToImpact:F2}s\n" +
-                $"Time Error: {(actualTimeToImpact - _predicted.timeToImpact):F2}s\n\n" +
-                $"Predicted Energy: {_predicted.impactEnergy:F1} J\n" +
-                $"Actual Energy: {actualImpactEnergy:F1} J\n\n" +
-                $"Impact Error Distance: {positionError:F2} m"
-            );
-        }
-        
-        void FixedUpdate()
-        {
-            if (!_isTracking || groundHeightProvider == null)
-                return;
-
-            if (!groundHeightProvider.TryGetGroundHeight(transform.position, out float groundY))
-                return;
-
-            float altitudeAGL = transform.position.y - groundY;
-
-            // Consider impact when we're very close to ground
-            // Detect ground crossing instead of exact contact
-            if (_lastAltitudeAGL > 0f && altitudeAGL <= 0f)
-            {
-                RegisterImpact(new Vector3(
-                    transform.position.x,
-                    groundY,
-                    transform.position.z
-                ));
-            }
-
-            _lastAltitudeAGL = altitudeAGL;
-        }
-        
-        private void RegisterImpact(Vector3 impactPoint)
-        {
-            _isTracking = false;
+            _impactConfirmed = true;
 
             float actualTimeToImpact = Time.time - _neutralizeTime;
             Vector3 impactVelocity = rb.linearVelocity;
@@ -108,21 +65,25 @@ namespace Infrastructure.Simulation
             float actualImpactEnergy =
                 0.5f * rb.mass * impactVelocity.sqrMagnitude;
 
+            Vector3 impactPoint =
+                collision.contactCount > 0
+                    ? collision.contacts[0].point
+                    : transform.position;
+
             float positionError =
-                Vector3.Distance(
-                    _predicted.impactPointWorld,
-                    impactPoint
-                );
+                Vector3.Distance(_predicted.impactPointWorld, impactPoint);
 
             Debug.Log(
-                $"[IMPACT ANALYSIS]\n" +
+                $"[IMPACT ANALYSIS CONFIRMED]\n" +
                 $"Predicted TTI: {_predicted.timeToImpact:F2}s\n" +
-                $"Actual TTI: {actualTimeToImpact:F2}s\n" +
-                $"Time Error: {(actualTimeToImpact - _predicted.timeToImpact):F2}s\n\n" +
+                $"Actual TTI: {actualTimeToImpact:F2}s\n\n" +
                 $"Predicted Energy: {_predicted.impactEnergy:F1} J\n" +
                 $"Actual Energy: {actualImpactEnergy:F1} J\n\n" +
                 $"Impact Error Distance: {positionError:F2} m"
             );
+            // TODO:
+            // Notify SimulationStateController here
+            // simulationStateController.OnImpactConfirmed(...)
         }
     }
 }

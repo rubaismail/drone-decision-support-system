@@ -14,7 +14,7 @@ namespace Infrastructure.Simulation
         [Header("Flight Control Scripts (to disable on neutralization)")]
         [SerializeField] private MonoBehaviour[] flightControllers;
         
-        [SerializeField] private ImpactOutcomeRecorder outcomeRecorder;
+        private ImpactOutcomeRecorder _outcomeRecorder;
 
         private Rigidbody _rb;
         private bool _isNeutralized = false;
@@ -22,8 +22,13 @@ namespace Infrastructure.Simulation
         void Awake()
         {
             _rb = GetComponent<Rigidbody>();
+            _outcomeRecorder = GetComponent<ImpactOutcomeRecorder>();
 
-            // Ensure drone starts in controlled mode
+            if (_outcomeRecorder == null)
+            {
+                Debug.LogError("ImpactOutcomeRecorder missing on DroneRoot");
+            }
+
             _rb.isKinematic = true;
             _rb.useGravity = false;
         }
@@ -57,7 +62,7 @@ namespace Infrastructure.Simulation
             _rb.useGravity = true;
             _rb.linearVelocity = initialVelocity;
             
-            outcomeRecorder?.OnNeutralized();
+            _outcomeRecorder.OnNeutralized();
 
             Debug.Log(
                 $"[NEUTRALIZE] Drone neutralized.\n" +
