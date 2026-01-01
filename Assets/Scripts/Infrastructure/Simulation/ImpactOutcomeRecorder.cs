@@ -65,13 +65,27 @@ namespace Infrastructure.Simulation
             float actualImpactEnergy =
                 0.5f * rb.mass * impactVelocity.sqrMagnitude;
 
-            Vector3 impactPoint =
-                collision.contactCount > 0
-                    ? collision.contacts[0].point
-                    : transform.position;
+            // Vector3 impactPoint =
+            //     collision.contactCount > 0
+            //         ? collision.contacts[0].point
+            //         : transform.position;
+            
+            Vector3 impactPoint = transform.position;
+            // Snap actual impact to ground using same provider
+            if (predictionRunner != null &&
+                predictionRunner.groundHeightProvider != null &&
+                predictionRunner.groundHeightProvider.TryGetGroundHeight(transform.position, out float groundY))
+            {
+                impactPoint = new Vector3(transform.position.x, groundY, transform.position.z);
+            }
+
+            // float positionError =
+            //     Vector3.Distance(_predicted.impactPointWorld, impactPoint);
+            
+            Vector3 predictedPoint = predictionRunner.LatestPredictedImpactPointSnapped;
 
             float positionError =
-                Vector3.Distance(_predicted.impactPointWorld, impactPoint);
+                Vector3.Distance(predictedPoint, impactPoint);
 
             Debug.Log(
                 $"[IMPACT ANALYSIS CONFIRMED]\n" +

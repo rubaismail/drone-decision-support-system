@@ -116,8 +116,9 @@ namespace Presentation.Visualization
             // --- Position & terrain snap ---
             Transform droneTf = predictionRunner.droneStateProvider.DroneTransform;
 
-            // predicted impact (NO brute offset here)
-            Vector3 worldImpact = droneTf.position + p.impactOffsetXZ;
+            // predicted impact 
+            //Vector3 worldImpact = droneTf.position + p.impactOffsetXZ;
+            Vector3 worldImpact = predictionRunner.LatestPredictedImpactPointSnapped;
 
             // Raycast straight down to terrain
             Vector3 rayStart = worldImpact + Vector3.up * 200f;
