@@ -21,6 +21,10 @@ namespace Infrastructure.Simulation
         {
             rb.isKinematic = true;
             rb.useGravity = false;
+            
+            var propellers = drone.GetComponentInChildren<DronePropellerController>();
+            if (propellers != null)
+                propellers.enabled = true;
 
             Vector3 start = drone.position;
             Vector3 target = start + Vector3.up * liftHeight;
@@ -34,6 +38,7 @@ namespace Infrastructure.Simulation
             }
 
             wander.enabled = true;
+            
             onComplete?.Invoke();
         }
     }

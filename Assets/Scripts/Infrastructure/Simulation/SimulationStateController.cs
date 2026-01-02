@@ -11,6 +11,7 @@ namespace Infrastructure.Simulation
         [SerializeField] private CameraDirector cameraDirector;
         [SerializeField] private UIStateController uiStateController;
         [SerializeField] private DroneResetController resetController;
+        [SerializeField] private PredictionRunner predictionRunner;
 
         public SimulationState CurrentState { get; private set; } = SimulationState.Live;
 
@@ -31,6 +32,7 @@ namespace Infrastructure.Simulation
         public void ResetSimulation()
         {
             CurrentState = SimulationState.Resetting;
+            predictionRunner.HideImpactVisualization(); 
 
             uiStateController.HideImpactResults();
             cameraDirector.ResetView();

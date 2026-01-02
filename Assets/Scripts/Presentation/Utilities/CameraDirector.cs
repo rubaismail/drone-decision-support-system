@@ -18,17 +18,36 @@ namespace Presentation.Utilities
 
         public void FocusOnImpact()
         {
+            // freeFlyCamera.enabled = false;
+            //
+            // _startPos = mainCamera.transform.position;
+            // _startRot = mainCamera.transform.rotation;
+            //
+            // StopAllCoroutines();
+            // StartCoroutine(MoveCamera(
+            //     droneTransform.position + impactOffset,
+            //     Quaternion.LookRotation(droneTransform.position - (_startPos)),
+            //     moveDuration
+            // ));
+            
             freeFlyCamera.enabled = false;
 
             _startPos = mainCamera.transform.position;
             _startRot = mainCamera.transform.rotation;
 
+            Vector3 targetPos =
+                droneTransform.position
+                - droneTransform.forward * 12f   // pull back
+                + Vector3.up * 6f;               // lift camera
+
+            Quaternion targetRot =
+                Quaternion.LookRotation(
+                    droneTransform.position - targetPos,
+                    Vector3.up
+                );
+
             StopAllCoroutines();
-            StartCoroutine(MoveCamera(
-                droneTransform.position + impactOffset,
-                Quaternion.LookRotation(droneTransform.position - (_startPos)),
-                moveDuration
-            ));
+            StartCoroutine(MoveCamera(targetPos, targetRot, moveDuration));
         }
 
         public void ResetView()

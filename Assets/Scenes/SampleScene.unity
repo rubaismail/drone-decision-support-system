@@ -2128,6 +2128,7 @@ MonoBehaviour:
   cameraDirector: {fileID: 2020140964}
   uiStateController: {fileID: 867586964}
   resetController: {fileID: 1812797791}
+  predictionRunner: {fileID: 1349887533}
 --- !u!4 &621819297
 Transform:
   m_ObjectHideFlags: 0
