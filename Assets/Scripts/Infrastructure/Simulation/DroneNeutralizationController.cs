@@ -1,4 +1,5 @@
 using Core.Data;
+using Infrastructure.Drone;
 using Infrastructure.Providers;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace Infrastructure.Simulation
         [Header("References")]
         [SerializeField] private UnityDroneStateProvider droneStateProvider;
         [SerializeField] private UnityWindProvider windProvider;
+        [SerializeField] private DroneAudioController audioController;
 
         [Header("Flight Control Scripts (to disable on neutralization)")]
         [SerializeField] private MonoBehaviour[] flightControllers;
@@ -49,6 +51,8 @@ namespace Infrastructure.Simulation
                 if (controller != null)
                     controller.enabled = false;
             }
+            
+            audioController?.StopMotor();
 
             // 2 - Capture current physical state
             DroneState state = droneStateProvider.GetCurrentState();

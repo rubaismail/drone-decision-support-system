@@ -4,6 +4,8 @@ namespace Infrastructure.Drone
 {
     public class DroneWanderController : MonoBehaviour
     {
+        [SerializeField] private DroneAudioController audioController;
+        
         [Header("Altitude Safety")]
         public float minAltitude = 5f; // meters above roamCenter Y
         
@@ -25,6 +27,11 @@ namespace Infrastructure.Drone
         void Start()
         {
             PickNewDirection();
+            audioController?.StartMotor();
+        }
+        void OnEnable()
+        {
+            audioController?.StartMotor();
         }
 
         void Update()
