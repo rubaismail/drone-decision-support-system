@@ -69,6 +69,16 @@ namespace Infrastructure.Simulation
                 $"Initial velocity = {initialVelocity}"
             );
         }
+        public void RestoreFlight()
+        {
+            foreach (var controller in flightControllers)
+            {
+                if (controller != null)
+                    controller.enabled = true;
+            }
+
+            _isNeutralized = false;
+        }
 
         public bool IsNeutralized => _isNeutralized;
     }

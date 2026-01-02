@@ -18,13 +18,13 @@ namespace Presentation.UI
         {
             root.SetActive(true);
 
-            predictedTTI.text = $"{data.predictedTTI:F2}s";
-            actualTTI.text = $"{data.actualTTI:F2}s";
+            predictedTTI.text = $" Predicted Time to Impact: {data.predictedTTI:F2} s";
+            actualTTI.text = $"Actual Time to Impact: {data.actualTTI:F2} s";
 
-            predictedEnergy.text = $"{data.predictedEnergy:F1} J";
-            actualEnergy.text = $"{data.actualEnergy:F1} J";
+            predictedEnergy.text = $"Predicted Energy: {data.predictedEnergy:F1} J";
+            actualEnergy.text = $"Actual Energy: {data.actualEnergy:F1} J";
 
-            errorDistance.text = $"{data.positionErrorMeters:F2} m";
+            errorDistance.text = $"Position Error: {data.positionErrorMeters:F2} m";
         }
 
         public void Hide()
