@@ -7,12 +7,13 @@ namespace Core.Prediction
     public class FallPredictor
     {
         private const float Gravity = 9.81f;
-        
+
+        // Energy thresholds (Joules)
         // TODO: These should be tuned later with data (or replaced by ML)
-        private const float EnergyLowJ = 100f;     // below this ≈ Low
-        private const float EnergyHighJ = 800f;   // above this ≈ High
-        
-            private struct MethodProfile
+        private const float EnergyLowJ = 100f;
+        private const float EnergyHighJ = 800f;
+
+        private struct MethodProfile
         {
             public float horizontalVelocityScale;   // scales lateral motion after neutralization
             public float timeScale;                 // scales descent time (e.g., partial thrust loss)
@@ -22,7 +23,7 @@ namespace Core.Prediction
 
         private static MethodProfile GetProfile(NeutralizationMethod method)
         {
-            // TODO: MVP placeholders — replace later
+            // TODO: These are MVP placeholders - replace later when taking into account neutralization methods
             switch (method)
             {
                 case NeutralizationMethod.MotorCutoff:
@@ -79,7 +80,9 @@ namespace Core.Prediction
         {
             FallPredictionResult result = new FallPredictionResult { isValid = false };
 
-            // --- Vertical motion ---
+            // =========================
+            // VERTICAL MOTION (kinematics)
+            // =========================
             float y0 = state.altitudeAboveGround;
             float v0y = state.velocity.y;
 
@@ -92,61 +95,66 @@ namespace Core.Prediction
                 return result;
 
             float tImpact = (-b - Mathf.Sqrt(discriminant)) / (2f * a);
-
             if (tImpact <= 0f)
                 return result;
 
-            // --- Wind → world-space velocity ---
+            // =========================
+            // WIND → ACCELERATION 
+            // =========================
             float radians = wind.direction * Mathf.Deg2Rad;
-            Vector3 windVelocity = new Vector3(
-                Mathf.Sin(radians),        // +X = East
+
+            Vector3 windAcceleration = new Vector3(
+                Mathf.Sin(radians), // +X = East
                 0f,
-                Mathf.Cos(radians)         // +Z = North
+                Mathf.Cos(radians)  // +Z = North
             ) * wind.speed;
 
-            // --- Horizontal drift ---
-            Vector3 horizontalVelocity =
-                new Vector3(state.velocity.x, 0f, state.velocity.z) 
-                + windVelocity;
-            
-            // Horizontal-only impact prediction (Y resolved later by ground snap)
-            Vector3 impactOffsetXZ = new Vector3(
-                horizontalVelocity.x * tImpact,
-                0f,
-                horizontalVelocity.z * tImpact
-            );
+            // =========================
+            // HORIZONTAL MOTION
+            // =========================
+            Vector3 initialHorizontalVelocity =
+                new Vector3(state.velocity.x, 0f, state.velocity.z);
 
-            float driftRadius = horizontalVelocity.magnitude * tImpact;
-            
-            // --- Impact energy (physically grounded) ---
-            // Vertical impact speed from kinematics: v^2 = v0^2 + 2gh
+            // Displacement with constant acceleration
+            Vector3 impactOffsetXZ =
+                initialHorizontalVelocity * tImpact +
+                0.5f * windAcceleration * tImpact * tImpact;
+
+            float driftRadius = impactOffsetXZ.magnitude;
+
+            // =========================
+            // IMPACT ENERGY
+            // =========================
             float vImpactY = Mathf.Sqrt(
                 state.velocity.y * state.velocity.y +
                 2f * Gravity * state.altitudeAboveGround
             );
 
-            // Horizontal velocity at impact (approx constant)
+            Vector3 vImpactHorizontal =
+                initialHorizontalVelocity + windAcceleration * tImpact;
+
             Vector3 vImpact = new Vector3(
-                state.velocity.x + windVelocity.x,
+                vImpactHorizontal.x,
                 -vImpactY,
-                state.velocity.z + windVelocity.z
+                vImpactHorizontal.z
             );
 
-            // Kinetic energy at impact
             float impactEnergy = 0.5f * state.mass * vImpact.sqrMagnitude;
-            
-            // --- Continuous risk (0..1) derived from energy ---
-            // Map EnergyLowJ -> 0, EnergyHighJ -> 1
+
+            // =========================
+            // RISK 
+            // =========================
             float risk01 = Mathf.InverseLerp(EnergyLowJ, EnergyHighJ, impactEnergy);
             risk01 = Mathf.Clamp01(risk01);
-            
-            // --- Qualitative risk derived from risk01 (keeps consistent) ---
+
             RiskLevel riskLevel =
                 risk01 < 0.33f ? RiskLevel.Low :
                 risk01 < 0.66f ? RiskLevel.Medium :
                 RiskLevel.High;
-            
-            // --- Recommendation (delegated) ---
+
+            // =========================
+            // RECOMMENDATION (Delegated)
+            // =========================
             ImpactRecommendationEngine.Evaluate(
                 state,
                 wind,
@@ -157,13 +165,12 @@ namespace Core.Prediction
                 out float bestDelay,
                 out float riskReduction01
             );
-            
-            // --- Populate result ---
-            
-            //a best-guess world point for UI/debug only
-            result.impactPointWorld = state.position + impactOffsetXZ;
-            
+
+            // =========================
+            // RESULT
+            // =========================
             result.impactOffsetXZ = impactOffsetXZ;
+            result.impactPointWorld = state.position + impactOffsetXZ;
             result.timeToImpact = tImpact;
             result.horizontalDriftRadius = driftRadius;
             result.impactEnergy = impactEnergy;
@@ -172,11 +179,14 @@ namespace Core.Prediction
             result.recommendedDelaySeconds = bestDelay;
             result.riskReductionPercent = riskReduction01 * 100f;
             result.isValid = true;
-            
+
             Debug.Log(
                 $"[PREDICT] DronePos={state.position} | " +
-                $"HorizVel={horizontalVelocity} | tImpact={tImpact:F2}s | " +
-                $"Offset={impactOffsetXZ} | ImpactGuess={result.impactPointWorld}"
+                $"HorizVel0={initialHorizontalVelocity} | " +
+                $"WindAccel={windAcceleration} | " +
+                $"tImpact={tImpact:F2}s | " +
+                $"Offset={impactOffsetXZ} | " +
+                $"ImpactGuess={result.impactPointWorld}"
             );
 
             return result;
