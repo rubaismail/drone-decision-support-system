@@ -10,7 +10,7 @@ namespace Presentation.Utilities
         [SerializeField] private Transform droneTransform;
 
         [Header("Impact View")]
-        [SerializeField] private Vector3 impactOffset = new Vector3(0, 6, -10);
+        [SerializeField] private Vector3 impactOffset = new Vector3(0, 6, -16);
         [SerializeField] private float moveDuration = 1.5f;
 
         private Vector3 _startPos;
@@ -24,7 +24,7 @@ namespace Presentation.Utilities
             _startRot = mainCamera.transform.rotation;
 
             Vector3 targetPos =
-                droneTransform.position
+                droneTransform.position //+ droneTransform.TransformDirection(impactOffset);
                 - droneTransform.forward * 12f   // pull back
                 + Vector3.up * 6f;               // lift camera
 

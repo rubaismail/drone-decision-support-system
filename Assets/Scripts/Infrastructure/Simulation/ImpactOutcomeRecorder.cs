@@ -11,6 +11,8 @@ namespace Infrastructure.Simulation
         [SerializeField] private Rigidbody rb;
         
         [SerializeField] private SimulationStateController simulationStateController;
+        
+        [SerializeField] private AudioSource impactAudio;
 
         [Header("Optional Filtering")]
         [Tooltip("Optional: restrict impact detection to these layers (e.g. Ground / CesiumTerrain). Leave empty to accept any collision.")]
@@ -66,11 +68,15 @@ namespace Infrastructure.Simulation
 
             float actualImpactEnergy =
                 0.5f * rb.mass * impactVelocity.sqrMagnitude;
+            
+            if (impactAudio != null)
+            {
+                impactAudio.Stop();
+                impactAudio.time = 0f;
 
-            // Vector3 impactPoint =
-            //     collision.contactCount > 0
-            //         ? collision.contacts[0].point
-            //         : transform.position;
+                impactAudio.volume = Mathf.Clamp01(actualImpactEnergy / 200f);
+                impactAudio.Play();
+            }
             
             Vector3 impactPoint = transform.position;
             // Snap actual impact to ground using same provider
@@ -80,9 +86,6 @@ namespace Infrastructure.Simulation
             {
                 impactPoint = new Vector3(transform.position.x, groundY, transform.position.z);
             }
-
-            // float positionError =
-            //     Vector3.Distance(_predicted.impactPointWorld, impactPoint);
             
             Vector3 predictedPoint = predictionRunner.LatestPredictedImpactPointSnapped;
 

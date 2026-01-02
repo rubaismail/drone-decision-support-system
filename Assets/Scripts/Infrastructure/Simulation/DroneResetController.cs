@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Infrastructure.Drone;
 
@@ -10,52 +9,31 @@ namespace Infrastructure.Simulation
         [SerializeField] private DroneWanderController wander;
         [SerializeField] private Rigidbody rb;
         [SerializeField] private DroneNeutralizationController neutralizationController;
+        [SerializeField] private AudioSource liftAudio;
 
         [SerializeField] private float liftHeight = 10f;
-        [SerializeField] private float liftDuration = 2.6f;
+        [SerializeField] private float liftDuration = 3.5f;
 
         public void ResetDrone(System.Action onComplete)
         {
             StartCoroutine(ResetRoutine(onComplete));
         }
 
-        //private System.Collections.IEnumerator ResetRoutine(System.Action onComplete)
-        //{
-        // rb.isKinematic = true;
-        // rb.useGravity = false;
-        //
-        // var propellers = drone.GetComponentInChildren<DronePropellerController>();
-        // if (propellers != null)
-        //     propellers.enabled = true;
-        //
-        // Vector3 start = drone.position;
-        // Vector3 target = start + Vector3.up * liftHeight;
-        //
-        // float t = 0f;
-        // while (t < 1f)
-        // {
-        //     t += Time.deltaTime / liftDuration;
-        //     drone.position = Vector3.Lerp(start, target, t);
-        //     yield return null;
-        // }
-        //
-        // wander.enabled = true;
-        //
-        // onComplete?.Invoke();
-        // }
-
         private System.Collections.IEnumerator ResetRoutine(System.Action onComplete)
         {
-            // 1. Disable wander so it can't fight us
+            // Disable drone wander controller
             wander.enabled = false;
 
-            // 2. Disable physics
+            // Disable physics
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.isKinematic = true;
             rb.useGravity = false;
+            
+            if (liftAudio != null && !liftAudio.isPlaying)
+                liftAudio.Play();
 
-            // 3. Compute a VALID reset altitude
+            // Compute reset altitude
             Vector3 target =
                 wander.roamCenter.position +
                 Vector3.up * (wander.minAltitude + liftHeight);
@@ -68,7 +46,7 @@ namespace Infrastructure.Simulation
             if (propellers != null)
                 propellers.enabled = true;
              
-            // 4. Lift + reorient
+            // Lift + reorient
             float t = 0f;
             while (t < 1f)
             {
@@ -78,15 +56,18 @@ namespace Infrastructure.Simulation
                 yield return null;
             }
 
-            // 5. Snap to safe state
+            // Snap to safe state
             drone.position = target;
             drone.rotation = targetRot;
             
             wander.SendMessage("PickNewDirection", SendMessageOptions.DontRequireReceiver);
 
-            // 6. Re-enable wander AFTER reset is complete
+            // Re-enable wander
             wander.enabled = true;
             neutralizationController.RestoreFlight();
+            
+            // if (liftAudio != null)
+            //     liftAudio.Stop();
 
             onComplete?.Invoke();
         }
