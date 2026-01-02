@@ -11,6 +11,9 @@ namespace Presentation.UI
 {
     public class UIManager : MonoBehaviour
     {
+        [Header("=== ROOT PANELS ===")]
+        public GameObject operatorRootPanel; // Panel_OperatorUI
+        
         [Header("=== PANEL STATES ===")]
         public GameObject telemetryPanel;  // Panel_Telemetry
         public GameObject inputPanel;      // Panel_Inputs
@@ -237,3 +240,4 @@ namespace Presentation.UI
         }
     }
 }
+

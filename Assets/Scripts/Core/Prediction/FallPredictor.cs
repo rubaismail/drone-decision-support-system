@@ -22,7 +22,7 @@ namespace Core.Prediction
 
         private static MethodProfile GetProfile(NeutralizationMethod method)
         {
-            // These are MVP placeholders — *documented* and *replaceable* later.
+            // TODO: MVP placeholders — replace later
             switch (method)
             {
                 case NeutralizationMethod.MotorCutoff:

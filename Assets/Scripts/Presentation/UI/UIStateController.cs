@@ -14,6 +14,7 @@ namespace Presentation.UI
 
         public void ShowOperatorUI()
         {
+            uiManager.operatorRootPanel.SetActive(true);
             uiManager.SendMessage("ShowOperatorState");
             if (comparisonPanel != null)
                 comparisonPanel.Hide();
@@ -21,8 +22,10 @@ namespace Presentation.UI
 
         public void HideOperatorUI()
         {
-            uiManager.telemetryPanel.SetActive(false);
-            uiManager.inputPanel.SetActive(false);
+            // uiManager.telemetryPanel.SetActive(false);
+            // uiManager.inputPanel.SetActive(false);
+            // uiManager.outputPanel.SetActive(false);
+            uiManager.operatorRootPanel.SetActive(false);
         }
 
         // =========================
@@ -34,10 +37,7 @@ namespace Presentation.UI
             // Hide normal operator UI
             HideOperatorUI();
 
-            // Show your existing output panel if you want
-            uiManager.outputPanel.SetActive(true);
-
-            // Populate the NEW comparison panel
+            // Populate the comparison panel
             if (comparisonPanel != null)
                 comparisonPanel.Show(data);
         }

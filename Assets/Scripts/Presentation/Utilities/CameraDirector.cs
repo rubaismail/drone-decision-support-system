@@ -18,18 +18,6 @@ namespace Presentation.Utilities
 
         public void FocusOnImpact()
         {
-            // freeFlyCamera.enabled = false;
-            //
-            // _startPos = mainCamera.transform.position;
-            // _startRot = mainCamera.transform.rotation;
-            //
-            // StopAllCoroutines();
-            // StartCoroutine(MoveCamera(
-            //     droneTransform.position + impactOffset,
-            //     Quaternion.LookRotation(droneTransform.position - (_startPos)),
-            //     moveDuration
-            // ));
-            
             freeFlyCamera.enabled = false;
 
             _startPos = mainCamera.transform.position;
