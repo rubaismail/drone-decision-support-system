@@ -64,7 +64,7 @@ namespace Infrastructure.Simulation
             _impactConfirmed = true;
 
             float actualTimeToImpact = Time.time - _neutralizeTime;
-            Vector3 impactVelocity = rb.linearVelocity;
+            Vector3 impactVelocity = collision.relativeVelocity;;
 
             float actualImpactEnergy =
                 0.5f * rb.mass * impactVelocity.sqrMagnitude;

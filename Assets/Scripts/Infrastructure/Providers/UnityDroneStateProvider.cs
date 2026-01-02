@@ -27,6 +27,10 @@ namespace Infrastructure.Providers
         public void SetMassKg(float newMassKg)
         {
             massKg = Mathf.Max(0.05f, newMassKg); // safety floor
+            if (droneRigidbody != null)
+            {
+                droneRigidbody.mass = massKg;
+            }
         }
 
         public DroneState GetCurrentState()

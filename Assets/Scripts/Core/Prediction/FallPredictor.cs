@@ -86,6 +86,7 @@ namespace Core.Prediction
             float y0 = state.altitudeAboveGround;
             float v0y = state.velocity.y;
 
+            // Solve: y = y0 + v0y*t - ½gt² = 0
             float a = -0.5f * Gravity;
             float b = v0y;
             float c = y0;
