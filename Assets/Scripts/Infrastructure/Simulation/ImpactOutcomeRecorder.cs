@@ -21,6 +21,7 @@ namespace Infrastructure.Simulation
         private bool _isTracking;
         private bool _impactConfirmed;
         private float _neutralizeTime;
+        private Vector3 _predictedImpactPointXZ;
 
         private FallPredictionResult _predicted;
 
@@ -41,6 +42,9 @@ namespace Infrastructure.Simulation
                 return;
 
             _predicted = predictionRunner.LatestPrediction;
+            // Lock predicted point at neutralization time
+            _predictedImpactPointXZ =
+                predictionRunner.LatestPredictedImpactPointSnapped;
             _neutralizeTime = Time.time;
 
             _isTracking = true;
@@ -87,10 +91,17 @@ namespace Infrastructure.Simulation
                 impactPoint = new Vector3(transform.position.x, groundY, transform.position.z);
             }
             
-            Vector3 predictedPoint = predictionRunner.LatestPredictedImpactPointSnapped;
+            //ector3 predictedPoint = predictionRunner.LatestPredictedImpactPointSnapped;
+
+            //float positionError = Vector3.Distance(predictedPoint, impactPoint);
+            Vector2 predictedXZ =
+                new Vector2(_predictedImpactPointXZ.x, _predictedImpactPointXZ.z);
+
+            Vector2 actualXZ =
+                new Vector2(impactPoint.x, impactPoint.z);
 
             float positionError =
-                Vector3.Distance(predictedPoint, impactPoint);
+                Vector2.Distance(predictedXZ, actualXZ);
 
             Debug.Log(
                 $"[IMPACT ANALYSIS CONFIRMED]\n" +
