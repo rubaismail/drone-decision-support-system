@@ -37,7 +37,12 @@ namespace Infrastructure.Drone
         void Update()
         {
             // Smooth speed transition
-            currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime * acceleration);
+            //currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime * acceleration);
+            currentSpeed = Mathf.MoveTowards(
+                currentSpeed,
+                targetSpeed,
+                acceleration * Time.deltaTime
+            );
 
             // Movement
             transform.position += targetDirection * (currentSpeed * Time.deltaTime);
@@ -67,6 +72,7 @@ namespace Infrastructure.Drone
             ).normalized;
 
             targetSpeed = Random.Range(minSpeed, maxSpeed);
+            currentSpeed *= Random.Range(0.6f, 1.1f);
         }
         
         void ClampAltitude()
@@ -99,10 +105,19 @@ namespace Infrastructure.Drone
             if (distance > wanderRadius)
             {
                 // Strong steering back inward
-                targetDirection = toCenter.normalized;
+                //targetDirection = toCenter.normalized;
 
                 // Increase speed slightly when returning
-                targetSpeed = maxSpeed;
+                //targetSpeed = maxSpeed;
+                
+                targetDirection = Vector3.Lerp(
+                    targetDirection,
+                    toCenter.normalized,
+                    0.5f
+                ).normalized;
+
+                targetSpeed = Mathf.Lerp(targetSpeed, maxSpeed, 0.5f);
+                
             }
         }
     }

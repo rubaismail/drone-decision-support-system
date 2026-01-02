@@ -6918,8 +6918,8 @@ MonoBehaviour:
   audioController: {fileID: 1812797795}
   minAltitude: 5
   minSpeed: 1
-  maxSpeed: 6
-  acceleration: 2
+  maxSpeed: 7
+  acceleration: 3
   directionChangeInterval: 2
   roamCenter: {fileID: 648987711}
   wanderRadius: 40
