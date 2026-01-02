@@ -9,6 +9,8 @@ namespace Infrastructure.Simulation
         [Header("References")]
         [SerializeField] private PredictionRunner predictionRunner;
         [SerializeField] private Rigidbody rb;
+        
+        [SerializeField] private SimulationStateController simulationStateController;
 
         [Header("Optional Filtering")]
         [Tooltip("Optional: restrict impact detection to these layers (e.g. Ground / CesiumTerrain). Leave empty to accept any collision.")]
@@ -95,9 +97,15 @@ namespace Infrastructure.Simulation
                 $"Actual Energy: {actualImpactEnergy:F1} J\n\n" +
                 $"Impact Error Distance: {positionError:F2} m"
             );
-            // TODO:
-            // Notify SimulationStateController here
-            // simulationStateController.OnImpactConfirmed(...)
+            
+            simulationStateController.OnImpactConfirmed(new ImpactComparisonData
+            {
+                predictedTTI = _predicted.timeToImpact,
+                actualTTI = actualTimeToImpact,
+                predictedEnergy = _predicted.impactEnergy,
+                actualEnergy = actualImpactEnergy,
+                positionErrorMeters = positionError
+            });
         }
     }
 }
